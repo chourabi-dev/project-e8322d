@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProductsRouteImport } from './routes/products'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as RestaurantsRestaurantIdRouteImport } from './routes/restaurants.$restaurantId'
@@ -55,6 +56,11 @@ const ProductsRoute = ProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/kitchen': typeof KitchenRoute
   '/orders': typeof OrdersRoute
   '/products': typeof ProductsRoute
+  '/settings': typeof SettingsRoute
   '/users': typeof UsersRoute
   '/restaurants/$restaurantId': typeof RestaurantsRestaurantIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/kitchen': typeof KitchenRoute
   '/orders': typeof OrdersRoute
   '/products': typeof ProductsRoute
+  '/settings': typeof SettingsRoute
   '/users': typeof UsersRoute
   '/restaurants/$restaurantId': typeof RestaurantsRestaurantIdRoute
   '/restaurants': typeof RestaurantsIndexRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/kitchen': typeof KitchenRoute
   '/orders': typeof OrdersRoute
   '/products': typeof ProductsRoute
+  '/settings': typeof SettingsRoute
   '/users': typeof UsersRoute
   '/restaurants/$restaurantId': typeof RestaurantsRestaurantIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/kitchen'
     | '/orders'
     | '/products'
+    | '/settings'
     | '/users'
     | '/restaurants/$restaurantId'
     | '/restaurants/'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/kitchen'
     | '/orders'
     | '/products'
+    | '/settings'
     | '/users'
     | '/restaurants/$restaurantId'
     | '/restaurants'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/kitchen'
     | '/orders'
     | '/products'
+    | '/settings'
     | '/users'
     | '/restaurants/$restaurantId'
     | '/restaurants/'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   KitchenRoute: typeof KitchenRoute
   OrdersRoute: typeof OrdersRoute
   ProductsRoute: typeof ProductsRoute
+  SettingsRoute: typeof SettingsRoute
   UsersRoute: typeof UsersRoute
   RestaurantsRestaurantIdRoute: typeof RestaurantsRestaurantIdRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/users': {
       id: '/users'
       path: '/users'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   KitchenRoute: KitchenRoute,
   OrdersRoute: OrdersRoute,
   ProductsRoute: ProductsRoute,
+  SettingsRoute: SettingsRoute,
   UsersRoute: UsersRoute,
   RestaurantsRestaurantIdRoute: RestaurantsRestaurantIdRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
