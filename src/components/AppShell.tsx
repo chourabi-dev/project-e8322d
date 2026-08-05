@@ -38,7 +38,7 @@ const nav = [
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-function Brand({ compact }: { compact?: boolean }) {
+function Brand({ compact }: { compact?: boolean | undefined }) {
   return (
     <Link to="/dashboard" className="flex items-center gap-2.5 px-1">
       <span className="gradient-primary grid size-9 place-items-center rounded-xl text-primary-foreground shadow-soft">
