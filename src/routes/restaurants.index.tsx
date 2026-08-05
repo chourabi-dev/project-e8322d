@@ -28,7 +28,7 @@ import {
 import { useRequireAuth } from "@/lib/auth";
 import { currency, restaurants as seed } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/restaurants")({
+export const Route = createFileRoute("/restaurants/")({
   head: () => ({
     meta: [
       { title: "Restaurants · Aveline Restaurant OS" },
