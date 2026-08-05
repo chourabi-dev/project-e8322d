@@ -54,7 +54,13 @@ function Brand({ compact }: { compact?: boolean }) {
   );
 }
 
-function NavList({ compact, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
+function NavList({
+  compact,
+  onNavigate,
+}: {
+  compact?: boolean | undefined;
+  onNavigate?: (() => void) | undefined;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -84,7 +90,13 @@ function NavList({ compact, onNavigate }: { compact?: boolean; onNavigate?: () =
   );
 }
 
-function SidebarBody({ compact, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
+function SidebarBody({
+  compact,
+  onNavigate,
+}: {
+  compact?: boolean | undefined;
+  onNavigate?: (() => void) | undefined;
+}) {
   const { session, signOut } = useAuth();
   const navigate = useNavigate();
 
