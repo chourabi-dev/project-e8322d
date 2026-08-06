@@ -1,4 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ReceiptText,
@@ -9,6 +11,13 @@ import {
   Clock,
   Settings2,
   MonitorPlay,
+  Plus,
+  Pencil,
+  Trash2,
+  Tags,
+  Flame,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import {
   Area,
@@ -19,51 +28,106 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { StatCard, SectionCard } from "@/components/StatCard";
+import { CategoryFormDialog } from "@/components/CategoryFormDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRequireAuth } from "@/lib/auth";
 import {
-  currency,
-  kitchenCategories,
-  menuCategories,
-  orders,
-  products,
-  restaurants,
-  revenueEvolution,
-} from "@/lib/mock-data";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useRequireAuth } from "@/lib/auth";
+import { currency, orders, products, revenueEvolution } from "@/lib/mock-data";
+import { fetchRestaurant } from "@/lib/restaurants-api";
+import {
+  createCategory,
+  deleteCategory,
+  fetchCategories,
+  updateCategory,
+  type Category,
+  type CategoryInput,
+  type CategoryKind,
+} from "@/lib/categories-api";
 
 export const Route = createFileRoute("/restaurants/$restaurantId")({
-  loader: ({ params }) => {
-    const restaurant = restaurants.find((r) => r.id === params.restaurantId);
-    if (!restaurant) throw notFound();
-    return { restaurant };
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData) {
-      return { meta: [{ title: "Restaurant unavailable · Aveline" }, { name: "robots", content: "noindex" }] };
-    }
-    const { restaurant } = loaderData;
-    return {
-      meta: [
-        { title: `${restaurant.name} · Aveline Restaurant OS` },
-        { name: "description", content: restaurant.description },
-        { property: "og:title", content: `${restaurant.name} · Aveline Restaurant OS` },
-        { property: "og:description", content: restaurant.description },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "Restaurant details · Aveline Restaurant OS" },
+      {
+        name: "description",
+        content:
+          "Live performance, products, menu and kitchen categories for a single restaurant location.",
+      },
+      { property: "og:title", content: "Restaurant details · Aveline Restaurant OS" },
+      {
+        property: "og:description",
+        content: "One location: metrics, products, categories and kitchen routing.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: RestaurantDetail,
 });
 
 function RestaurantDetail() {
   useRequireAuth();
-  const { restaurant } = Route.useLoaderData();
-  const own = products.filter((p) => p.restaurantId === restaurant.id);
-  const ownOrders = orders.filter((o) => o.restaurantId === restaurant.id);
+  const { restaurantId } = Route.useParams();
+  const restaurantQuery = useQuery({
+    queryKey: ["restaurant", restaurantId],
+    queryFn: () => fetchRestaurant(restaurantId),
+  });
+
+  const restaurant = restaurantQuery.data;
+  const own = products.filter((p) => p.restaurantId === restaurantId);
+  const ownOrders = orders.filter((o) => o.restaurantId === restaurantId);
+
+  if (restaurantQuery.isLoading) {
+    return (
+      <AppShell title="Restaurant" subtitle="Loading location…">
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+          ))}
+        </div>
+        <Skeleton className="h-[300px] w-full rounded-2xl" />
+      </AppShell>
+    );
+  }
+
+  if (restaurantQuery.isError || !restaurant) {
+    return (
+      <AppShell title="Restaurant" subtitle="We couldn't load this location">
+        <div className="panel flex flex-col items-start gap-3 p-6">
+          <p className="text-sm text-muted-foreground">
+            {(restaurantQuery.error as Error | null)?.message ?? "Restaurant not found."}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => restaurantQuery.refetch()}>
+              <RefreshCw className="size-4" /> Try again
+            </Button>
+            <Button asChild variant="ghost" className="gap-2">
+              <Link to="/restaurants">
+                <ArrowLeft className="size-4" /> All restaurants
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell
@@ -91,13 +155,19 @@ function RestaurantDetail() {
         <Badge variant={restaurant.active ? "default" : "secondary"}>
           {restaurant.active ? "Active" : "Inactive"}
         </Badge>
-        <span className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MapPin className="size-4" /> {restaurant.address}
-        </span>
-        <span className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="size-4" /> {restaurant.hours}
-        </span>
-        <p className="w-full text-sm text-muted-foreground">{restaurant.description}</p>
+        {restaurant.address && (
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="size-4" /> {restaurant.address}
+          </span>
+        )}
+        {restaurant.hours && (
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="size-4" /> {restaurant.hours}
+          </span>
+        )}
+        {restaurant.description && (
+          <p className="w-full text-sm text-muted-foreground">{restaurant.description}</p>
+        )}
       </div>
 
       <Tabs defaultValue="overview">
@@ -105,7 +175,6 @@ function RestaurantDetail() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="kitchen">Kitchen categories</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="stats">Statistics</TabsTrigger>
         </TabsList>
@@ -165,27 +234,7 @@ function RestaurantDetail() {
         </TabsContent>
 
         <TabsContent value="categories" className="mt-5">
-          <SectionCard title="Menu categories" description="Drive how products appear on the customer menu">
-            <div className="flex flex-wrap gap-2">
-              {menuCategories.map((c) => (
-                <Badge key={c.id} variant="outline" className="px-3 py-1.5">
-                  {c.name} · {c.products}
-                </Badge>
-              ))}
-            </div>
-          </SectionCard>
-        </TabsContent>
-
-        <TabsContent value="kitchen" className="mt-5">
-          <SectionCard title="Kitchen categories" description="Route each product to the right station screen">
-            <div className="flex flex-wrap gap-2">
-              {kitchenCategories.map((c) => (
-                <Badge key={c.id} variant="secondary" className="px-3 py-1.5">
-                  {c.name} · {c.station}
-                </Badge>
-              ))}
-            </div>
-          </SectionCard>
+          <CategoriesPanel restaurantId={restaurantId} />
         </TabsContent>
 
         <TabsContent value="orders" className="mt-5">
@@ -230,5 +279,218 @@ function RestaurantDetail() {
         </TabsContent>
       </Tabs>
     </AppShell>
+  );
+}
+
+function CategoriesPanel({ restaurantId }: { restaurantId: string }) {
+  const queryClient = useQueryClient();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Category | null>(null);
+  const [defaultKind, setDefaultKind] = useState<CategoryKind>("menu");
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+
+  const menuQuery = useQuery({
+    queryKey: ["categories", "menu", restaurantId],
+    queryFn: () => fetchCategories("menu", restaurantId),
+  });
+  const kitchenQuery = useQuery({
+    queryKey: ["categories", "kitchen", restaurantId],
+    queryFn: () => fetchCategories("kitchen", restaurantId),
+  });
+
+  const invalidate = (kind: CategoryKind) =>
+    queryClient.invalidateQueries({ queryKey: ["categories", kind, restaurantId] });
+
+  const saveMutation = useMutation({
+    mutationFn: (input: CategoryInput) =>
+      editing
+        ? updateCategory(editing.id, input, restaurantId)
+        : createCategory(input, restaurantId),
+    onSuccess: async (_data, input) => {
+      await invalidate(input.kind);
+      toast.success(editing ? "Category updated" : "Category created");
+      setFormOpen(false);
+      setEditing(null);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (category: Category) => deleteCategory(category.kind, category.id),
+    onSuccess: async (_data, category) => {
+      await invalidate(category.kind);
+      toast.success("Category deleted");
+      setPendingDelete(null);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const openAdd = (kind: CategoryKind) => {
+    setEditing(null);
+    setDefaultKind(kind);
+    setFormOpen(true);
+  };
+
+  const openEdit = (category: Category) => {
+    setEditing(category);
+    setDefaultKind(category.kind);
+    setFormOpen(true);
+  };
+
+  const renderList = (
+    query: typeof menuQuery,
+    kind: CategoryKind,
+    subtitle: (c: Category) => string,
+  ) => {
+    if (query.isLoading) {
+      return (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
+      );
+    }
+    if (query.isError) {
+      return (
+        <div className="flex flex-col items-start gap-3 py-6">
+          <p className="text-sm text-muted-foreground">
+            {(query.error as Error).message}
+          </p>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => query.refetch()}>
+            <RefreshCw className="size-4" /> Retry
+          </Button>
+        </div>
+      );
+    }
+    const list = query.data ?? [];
+    if (list.length === 0) {
+      return (
+        <div className="flex flex-col items-start gap-3 py-8">
+          <p className="text-sm text-muted-foreground">No categories yet.</p>
+          <Button size="sm" className="gap-2" onClick={() => openAdd(kind)}>
+            <Plus className="size-4" /> Add category
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <ul className="flex flex-col">
+        {list.map((c) => (
+          <li
+            key={c.id}
+            className="group flex items-center gap-3 border-b border-border py-3 last:border-0"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{c.name}</p>
+              <p className="text-xs text-muted-foreground">{subtitle(c)}</p>
+            </div>
+            {kind === "menu" && !c.visible && <Badge variant="secondary">Hidden</Badge>}
+            {kind === "kitchen" && (
+              <Badge variant="outline">
+                {c.screens} screen{c.screens > 1 ? "s" : ""}
+              </Badge>
+            )}
+            <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Edit ${c.name}`}
+                onClick={() => openEdit(c)}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Delete ${c.name}`}
+                onClick={() => setPendingDelete(c)}
+              >
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Menu categories shape the customer menu · kitchen categories route tickets to stations.
+        </p>
+        <Button className="gap-2" onClick={() => openAdd("menu")}>
+          <Plus className="size-4" /> Add category
+        </Button>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SectionCard
+          title="Menu categories"
+          description="What guests see when browsing the menu"
+          action={
+            <span className="grid size-9 place-items-center rounded-lg bg-info/12 text-info">
+              <Tags className="size-4.5" />
+            </span>
+          }
+        >
+          {renderList(menuQuery, "menu", (c) => `${c.products} products`)}
+        </SectionCard>
+
+        <SectionCard
+          title="Kitchen categories"
+          description="Used only to route tickets to station screens"
+          action={
+            <span className="grid size-9 place-items-center rounded-lg bg-primary/12 text-primary">
+              <Flame className="size-4.5" />
+            </span>
+          }
+        >
+          {renderList(kitchenQuery, "kitchen", (c) => c.station || "Unassigned station")}
+        </SectionCard>
+      </div>
+
+      <CategoryFormDialog
+        open={formOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setEditing(null);
+        }}
+        category={editing}
+        defaultKind={defaultKind}
+        saving={saveMutation.isPending}
+        onSubmit={(input) => saveMutation.mutate(input)}
+      />
+
+      <AlertDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete “{pendingDelete?.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the {pendingDelete?.kind} category. Products assigned to it will need a
+              new category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingDelete) deleteMutation.mutate(pendingDelete);
+              }}
+            >
+              {deleteMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
