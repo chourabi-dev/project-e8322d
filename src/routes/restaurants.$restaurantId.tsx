@@ -84,8 +84,6 @@ export const Route = createFileRoute("/restaurants/$restaurantId")({
 function RestaurantDetail() {
   useRequireAuth();
   const { restaurantId } = Route.useParams();
-  const queryClient = useQueryClient();
-
   const restaurantQuery = useQuery({
     queryKey: ["restaurant", restaurantId],
     queryFn: () => fetchRestaurant(restaurantId),
@@ -280,9 +278,6 @@ function RestaurantDetail() {
           </SectionCard>
         </TabsContent>
       </Tabs>
-
-      {/* keep query client referenced for category mutations inside the panel */}
-      <span className="hidden">{queryClient ? "" : ""}</span>
     </AppShell>
   );
 }
