@@ -32,6 +32,8 @@ export type RestaurantInput = {
 };
 
 const ACCENTS = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"];
+ 
+ 
 
 /** API responses may be a plain array, a Hydra collection, or { data: [...] }. */
 function toArray(payload: unknown): Record<string, unknown>[] {
@@ -98,13 +100,13 @@ async function parse(response: Response) {
 }
 
 export async function fetchRestaurants(): Promise<Restaurant[]> {
-  const payload = await parse(await api("/api/restaurants"));
+  const payload = await parse(await api(`/api/restaurants`));
   return toArray(payload).map(normalizeRestaurant);
 }
 
 export async function createRestaurant(input: RestaurantInput): Promise<Restaurant> {
   const payload = await parse(
-    await api("/api/restaurants", { method: "POST", body: JSON.stringify(input) }),
+    await api(`/api/restaurants`, { method: "POST", body: JSON.stringify(input) }),
   );
   return normalizeRestaurant((payload as Record<string, unknown>) ?? { ...input });
 }

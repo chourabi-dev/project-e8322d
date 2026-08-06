@@ -207,6 +207,7 @@ function RestaurantsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((r) => (
+
             <article key={r.id} className="panel lift animate-rise overflow-hidden p-0">
               <div
                 className="relative h-28"
@@ -226,7 +227,9 @@ function RestaurantsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEdit(r)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem
+                      {
+                        /**
+                         * <DropdownMenuItem
                         onClick={() =>
                           saveMutation.mutate({
                             input: {
@@ -246,6 +249,8 @@ function RestaurantsPage() {
                       >
                         Duplicate
                       </DropdownMenuItem>
+                         */
+                      }
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => setPendingDelete(r)}
@@ -292,7 +297,8 @@ function RestaurantsPage() {
                   </Badge>
                 </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-3 rounded-xl bg-surface p-3 text-center">
+                {
+                  /**<div className="mt-5 grid grid-cols-3 gap-3 rounded-xl bg-surface p-3 text-center">
                   <div>
                     <p className="num text-base font-semibold">{r.ordersToday}</p>
                     <p className="text-[11px] text-muted-foreground">Orders</p>
@@ -305,7 +311,8 @@ function RestaurantsPage() {
                     <p className="num text-base font-semibold">{r.products}</p>
                     <p className="text-[11px] text-muted-foreground">Products</p>
                   </div>
-                </div>
+                </div> */
+                }
 
                 <div className="mt-5 flex items-center justify-between gap-3">
                   <label className="flex items-center gap-2 text-xs text-muted-foreground">
