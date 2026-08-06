@@ -30,7 +30,7 @@ interface AuthContextType {
 
 const KEY = "aveline-session";
 //const API_URL = "http://localhost:8000";
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env["VITE_API_URL"];
 
 
 console.log(API_URL);
