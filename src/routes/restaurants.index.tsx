@@ -91,7 +91,7 @@ function RestaurantsPage() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["restaurants"] });
 
   const saveMutation = useMutation({
-    mutationFn: (vars: { id?: string; input: RestaurantInput }) =>
+    mutationFn: (vars: { id?: string | undefined; input: RestaurantInput }) =>
       vars.id ? updateRestaurant(vars.id, vars.input) : createRestaurant(vars.input),
     onSuccess: (_result, vars) => {
       toast.success(vars.id ? "Restaurant updated" : "Restaurant created");
