@@ -14,13 +14,13 @@ import { useTheme } from "@/lib/theme";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sign in · Aveline Restaurant OS" },
+      { title: "Sign in · Dalu Restaurant OS" },
       {
         name: "description",
         content:
-          "Sign in to Aveline to manage restaurants, menus, kitchen display screens and live orders.",
+          "Sign in to Dalu to manage restaurants, menus, kitchen display screens and live orders.",
       },
-      { property: "og:title", content: "Sign in · Aveline Restaurant OS" },
+      { property: "og:title", content: "Sign in · Dalu Restaurant OS" },
       {
         property: "og:description",
         content: "One login for every restaurant, kitchen screen and menu you operate.",
@@ -34,8 +34,8 @@ function LoginPage() {
   const { signIn, session, ready } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("yasmine");
-  const [password, setPassword] = useState("aveline");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +51,8 @@ function LoginPage() {
     setLoading(true);
     window.setTimeout(() => {
       signIn(username.trim(), password);
+
+      
       toast.success(`Welcome back, ${username.trim()}`);
       navigate({ to: "/dashboard" });
     }, 550);
@@ -59,41 +61,19 @@ function LoginPage() {
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[1.05fr_1fr]">
       <div className="relative hidden overflow-hidden lg:block">
-        <img
-          src={loginImage}
-          alt="Chef plating a dish at the pass of a modern restaurant kitchen"
-          width={1280}
-          height={1600}
-          className="absolute inset-0 size-full object-cover"
-        />
+         
         <div className="absolute inset-0 bg-linear-to-t from-background via-background/55 to-background/10" />
         <div className="relative flex h-full flex-col justify-between p-10">
           <div className="flex items-center gap-2.5">
             <span className="gradient-primary grid size-10 place-items-center rounded-xl text-primary-foreground">
               <UtensilsCrossed className="size-5" />
             </span>
-            <span className="font-display text-lg font-semibold">Aveline</span>
+            <span className="font-display text-lg font-semibold">Dalu</span>
           </div>
           <div className="max-w-md">
             <h2 className="font-display text-4xl leading-tight font-semibold">
               Every service, every station, one screen.
-            </h2>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Live kitchen displays, unlimited restaurants and instant menu control — built for the
-              middle of a rush.
-            </p>
-            <div className="mt-8 flex gap-8">
-              {[
-                { k: "Restaurants", v: "Unlimited" },
-                { k: "Ticket lag", v: "< 1s" },
-                { k: "Stations", v: "6 live" },
-              ].map((s) => (
-                <div key={s.k}>
-                  <p className="num text-xl font-semibold">{s.v}</p>
-                  <p className="text-xs text-muted-foreground">{s.k}</p>
-                </div>
-              ))}
-            </div>
+            </h2> 
           </div>
         </div>
       </div>
@@ -142,14 +122,7 @@ function LoginPage() {
                 className="h-11"
               />
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-muted-foreground">
-                <Checkbox defaultChecked /> Keep me signed in
-              </label>
-              <button type="button" className="text-primary hover:underline">
-                Forgot password?
-              </button>
-            </div>
+             
             <Button type="submit" className="h-11 w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
               Sign in
