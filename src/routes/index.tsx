@@ -49,13 +49,25 @@ function LoginPage() {
       return;
     }
     setLoading(true);
-    window.setTimeout(() => {
-      signIn(username.trim(), password);
+
+    signIn(username.trim(), password).then((res)=>{
+
+      console.log(res);
 
       
       toast.success(`Welcome back, ${username.trim()}`);
       navigate({ to: "/dashboard" });
-    }, 550);
+
+
+    }).catch((err)=>{
+       toast.error(`Wrong username or password`);
+
+    }).finally(()=>{
+      setLoading(false);
+    })
+    
+    
+    
   };
 
   return (
