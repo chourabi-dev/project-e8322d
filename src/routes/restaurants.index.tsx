@@ -363,9 +363,9 @@ function RestaurantsPage() {
               {deleteMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialog>
-      </AlertDialogContent>
-    </AlertDialog>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
+
   );
 }
