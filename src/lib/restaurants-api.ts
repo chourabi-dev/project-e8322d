@@ -104,6 +104,13 @@ export async function fetchRestaurants(): Promise<Restaurant[]> {
   return toArray(payload).map(normalizeRestaurant);
 }
 
+export async function fetchRestaurant(id: string): Promise<Restaurant> {
+  const payload = await parse(await api(`/api/restaurants/${id}`));
+  if (!payload || typeof payload !== "object") throw new Error("Restaurant not found");
+  return normalizeRestaurant(payload as Record<string, unknown>);
+}
+
+
 export async function createRestaurant(input: RestaurantInput): Promise<Restaurant> {
   const payload = await parse(
     await api(`/api/restaurants`, { method: "POST", body: JSON.stringify(input) }),
