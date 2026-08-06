@@ -60,25 +60,27 @@ const bool = (value: unknown, fallback = false) =>
   typeof value === "boolean" ? value : typeof value === "number" ? value !== 0 : fallback;
 
 export function normalizeRestaurant(raw: Record<string, unknown>, index = 0): Restaurant {
-  const id = str(raw.id, raw.uuid, raw["@id"], raw.slug) || `restaurant-${index}`;
+  const r = raw;
+  const id = str(r["id"], r["uuid"], r["@id"], r["slug"]) || `restaurant-${index}`;
   return {
     id,
-    name: str(raw.name, raw.title, "Untitled restaurant"),
-    tagline: str(raw.tagline, raw.subtitle, raw.city),
-    address: str(raw.address, raw.street, raw.location),
-    phone: str(raw.phone, raw.phoneNumber, raw.telephone),
-    email: str(raw.email, raw.contactEmail),
-    description: str(raw.description, raw.about),
-    hours: str(raw.hours, raw.openingHours, raw.schedule),
-    delivery: bool(raw.delivery ?? raw.hasDelivery ?? raw.deliveryEnabled),
-    pickup: bool(raw.pickup ?? raw.hasPickup ?? raw.pickupEnabled),
-    active: bool(raw.active ?? raw.isActive ?? raw.enabled, true),
-    ordersToday: num(raw.ordersToday, raw.orders_today, raw.ordersCount),
-    revenueToday: num(raw.revenueToday, raw.revenue_today, raw.revenue),
-    products: num(raw.products, raw.productsCount, raw.product_count),
-    accent: str(raw.accent) || ACCENTS[index % ACCENTS.length],
+    name: str(r["name"], r["title"], "Untitled restaurant"),
+    tagline: str(r["tagline"], r["subtitle"], r["city"]),
+    address: str(r["address"], r["street"], r["location"]),
+    phone: str(r["phone"], r["phoneNumber"], r["telephone"]),
+    email: str(r["email"], r["contactEmail"]),
+    description: str(r["description"], r["about"]),
+    hours: str(r["hours"], r["openingHours"], r["schedule"]),
+    delivery: bool(r["delivery"] ?? r["hasDelivery"] ?? r["deliveryEnabled"]),
+    pickup: bool(r["pickup"] ?? r["hasPickup"] ?? r["pickupEnabled"]),
+    active: bool(r["active"] ?? r["isActive"] ?? r["enabled"], true),
+    ordersToday: num(r["ordersToday"], r["orders_today"], r["ordersCount"]),
+    revenueToday: num(r["revenueToday"], r["revenue_today"], r["revenue"]),
+    products: num(r["products"], r["productsCount"], r["product_count"]),
+    accent: str(r["accent"]) || ACCENTS[index % ACCENTS.length] || "chart-1",
   };
 }
+
 
 async function parse(response: Response) {
   if (!response.ok) {
