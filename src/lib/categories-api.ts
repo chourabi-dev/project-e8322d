@@ -109,7 +109,8 @@ async function parse(response: Response) {
 
 function payloadFor(input: CategoryInput, restaurantId?: string) {
   const base: Record<string, unknown> = { name: input.name };
-  if (restaurantId) base["restaurant"] = restaurantId;
+  const restaurant = input.restaurantId || restaurantId;
+  if (restaurant) base["restaurant"] = restaurant;
   if (input.kind === "menu") {
     base["visible"] = input.visible;
   } else {
@@ -118,6 +119,7 @@ function payloadFor(input: CategoryInput, restaurantId?: string) {
   }
   return base;
 }
+
 
 function withRestaurant(path: string, restaurantId?: string) {
   return restaurantId ? `${path}?restaurant=${encodeURIComponent(restaurantId)}` : path;
