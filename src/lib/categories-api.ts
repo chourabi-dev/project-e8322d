@@ -12,6 +12,8 @@ export type Category = {
   /** kitchen only */
   station: string;
   screens: number;
+  restaurantId: string;
+  restaurantName: string;
 };
 
 export type CategoryInput = {
@@ -20,7 +22,9 @@ export type CategoryInput = {
   visible: boolean;
   station: string;
   screens: number;
+  restaurantId: string;
 };
+
 
 const ENDPOINT: Record<CategoryKind, string> = {
   menu: "/api/menu_categories",
