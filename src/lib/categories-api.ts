@@ -12,6 +12,8 @@ export type Category = {
   /** kitchen only */
   station: string;
   screens: number;
+  restaurantId: string;
+  restaurantName: string;
 };
 
 export type CategoryInput = {
@@ -20,7 +22,9 @@ export type CategoryInput = {
   visible: boolean;
   station: string;
   screens: number;
+  restaurantId: string;
 };
+
 
 const ENDPOINT: Record<CategoryKind, string> = {
   menu: "/api/menu_categories",
@@ -53,12 +57,27 @@ const num = (...values: unknown[]) => {
 const bool = (value: unknown, fallback = false) =>
   typeof value === "boolean" ? value : typeof value === "number" ? value !== 0 : fallback;
 
+/** restaurant may be an id, an IRI ("/api/restaurants/3") or a nested object. */
+function restaurantRef(raw: Record<string, unknown>) {
+  const value = raw["restaurant"] ?? raw["restaurantId"] ?? raw["restaurant_id"];
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return {
+      id: str(obj["id"], obj["@id"]).split("/").pop() ?? "",
+      name: str(obj["name"], obj["title"]),
+    };
+  }
+  const asString = typeof value === "number" ? `${value}` : str(value);
+  return { id: asString.split("/").pop() ?? "", name: "" };
+}
+
 export function normalizeCategory(
   raw: Record<string, unknown>,
   kind: CategoryKind,
   index = 0,
 ): Category {
   const r = raw;
+  const restaurant = restaurantRef(r);
   return {
     id: `${r["id"]}`,
     kind,
@@ -67,8 +86,11 @@ export function normalizeCategory(
     visible: bool(r["visible"] ?? r["isVisible"] ?? r["active"], true),
     station: str(r["station"], r["stationName"], r["screenName"]),
     screens: num(r["screens"], r["screensCount"]) || 1,
+    restaurantId: restaurant.id,
+    restaurantName: restaurant.name,
   };
 }
+
 
 async function parse(response: Response) {
   if (!response.ok) {
@@ -87,7 +109,8 @@ async function parse(response: Response) {
 
 function payloadFor(input: CategoryInput, restaurantId?: string) {
   const base: Record<string, unknown> = { name: input.name };
-  if (restaurantId) base["restaurant"] = restaurantId;
+  const restaurant = input.restaurantId || restaurantId;
+  if (restaurant) base["restaurant"] = restaurant;
   if (input.kind === "menu") {
     base["visible"] = input.visible;
   } else {
@@ -96,6 +119,7 @@ function payloadFor(input: CategoryInput, restaurantId?: string) {
   }
   return base;
 }
+
 
 function withRestaurant(path: string, restaurantId?: string) {
   return restaurantId ? `${path}?restaurant=${encodeURIComponent(restaurantId)}` : path;

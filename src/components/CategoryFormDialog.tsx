@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2, Tags, Flame } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { Category, CategoryInput, CategoryKind } from "@/lib/categories-api";
+import { fetchRestaurants } from "@/lib/restaurants-api";
 
 const EMPTY: CategoryInput = {
   kind: "menu",
@@ -22,6 +31,7 @@ const EMPTY: CategoryInput = {
   visible: true,
   station: "",
   screens: 1,
+  restaurantId: "",
 };
 
 interface Props {
@@ -30,6 +40,8 @@ interface Props {
   category?: Category | null;
   /** pre-selects the kind when adding from a specific column */
   defaultKind?: CategoryKind;
+  /** when set, the category belongs to this restaurant and the picker is hidden */
+  lockedRestaurantId?: string;
   saving?: boolean;
   onSubmit: (input: CategoryInput) => void;
 }
@@ -39,12 +51,20 @@ export function CategoryFormDialog({
   onOpenChange,
   category,
   defaultKind = "menu",
+  lockedRestaurantId,
   saving = false,
   onSubmit,
 }: Props) {
   const [form, setForm] = useState<CategoryInput>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const editing = Boolean(category);
+
+  const restaurantsQuery = useQuery({
+    queryKey: ["restaurants"],
+    queryFn: fetchRestaurants,
+    enabled: open && !lockedRestaurantId,
+  });
+  const restaurants = restaurantsQuery.data ?? [];
 
   useEffect(() => {
     if (!open) return;
@@ -57,10 +77,11 @@ export function CategoryFormDialog({
             visible: category.visible,
             station: category.station,
             screens: category.screens || 1,
+            restaurantId: lockedRestaurantId ?? category.restaurantId,
           }
-        : { ...EMPTY, kind: defaultKind },
+        : { ...EMPTY, kind: defaultKind, restaurantId: lockedRestaurantId ?? "" },
     );
-  }, [open, category, defaultKind]);
+  }, [open, category, defaultKind, lockedRestaurantId]);
 
   const set = <K extends keyof CategoryInput>(key: K, value: CategoryInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -71,12 +92,21 @@ export function CategoryFormDialog({
       setError("Category name is required.");
       return;
     }
+    if (!lockedRestaurantId && !form.restaurantId) {
+      setError("Pick the restaurant this category belongs to.");
+      return;
+    }
     if (form.kind === "kitchen" && !form.station.trim()) {
       setError("Kitchen categories need a station so tickets can be routed.");
       return;
     }
     setError(null);
-    onSubmit({ ...form, name: form.name.trim(), station: form.station.trim() });
+    onSubmit({
+      ...form,
+      name: form.name.trim(),
+      station: form.station.trim(),
+      restaurantId: lockedRestaurantId ?? form.restaurantId,
+    });
   };
 
   const kinds: { value: CategoryKind; label: string; hint: string; icon: typeof Tags }[] = [
@@ -140,6 +170,34 @@ export function CategoryFormDialog({
               </p>
             )}
           </div>
+
+          {!lockedRestaurantId && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="category-restaurant">Restaurant</Label>
+              <Select
+                value={form.restaurantId}
+                onValueChange={(v) => set("restaurantId", v)}
+              >
+                <SelectTrigger id="category-restaurant">
+                  <SelectValue
+                    placeholder={
+                      restaurantsQuery.isLoading ? "Loading restaurants…" : "Select a restaurant"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {restaurants.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Menu and kitchen categories always belong to one restaurant.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="category-name">Name</Label>
