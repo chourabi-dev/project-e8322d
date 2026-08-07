@@ -22,17 +22,26 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { Category, CategoryInput, CategoryKind } from "@/lib/categories-api";
+import {
+  fetchCategories,
+  type Category,
+  type CategoryInput,
+  type CategoryKind,
+} from "@/lib/categories-api";
 import { fetchRestaurants } from "@/lib/restaurants-api";
+
+const NONE = "none";
 
 const EMPTY: CategoryInput = {
   kind: "menu",
   name: "",
   visible: true,
+  kitchenCategoryId: "",
   station: "",
   screens: 1,
   restaurantId: "",
 };
+
 
 interface Props {
   open: boolean;
