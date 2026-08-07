@@ -60,7 +60,7 @@ export function normalizeCategory(
 ): Category {
   const r = raw;
   return {
-    id: str(r["id"], r["uuid"], r["@id"], r["slug"]) || `${kind}-category-${index}`,
+    id: `${r["id"]}`,
     kind,
     name: str(r["name"], r["title"], "Untitled category"),
     products: num(r["products"], r["productsCount"], r["product_count"]),
@@ -127,6 +127,11 @@ export async function updateCategory(
   input: CategoryInput,
   restaurantId?: string,
 ): Promise<Category> {
+
+  console.log("UPDATING ...");
+  console.log(id);
+  
+  
   const payload = await parse(
     await api(`${ENDPOINT[input.kind]}/${id}`, {
       method: "PUT",

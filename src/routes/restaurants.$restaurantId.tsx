@@ -332,6 +332,7 @@ function CategoriesPanel({ restaurantId }: { restaurantId: string }) {
   };
 
   const openEdit = (category: Category) => {
+   
     setEditing(category);
     setDefaultKind(category.kind);
     setFormOpen(true);
