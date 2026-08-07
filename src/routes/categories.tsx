@@ -96,7 +96,12 @@ function CategoriesPage() {
     queryFn: () => fetchCategories("kitchen", scope),
   });
 
+  const menuCategories = menuQuery.data ?? [];
+  const kitchenCategories = kitchenQuery.data ?? [];
+  const kitchenById = new Map(kitchenCategories.map((k) => [k.id, k]));
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
+
 
   const saveMutation = useMutation({
     mutationFn: (input: CategoryInput) =>
