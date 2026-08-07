@@ -75,6 +75,21 @@ function restaurantRef(raw: Record<string, unknown>) {
   return { id: asString.split("/").pop() ?? "", name: "" };
 }
 
+/** kitchen category link may be an id, an IRI or a nested object. */
+function kitchenCategoryRef(raw: Record<string, unknown>) {
+  const value =
+    raw["kitchenCategory"] ??
+    raw["kitchen_category"] ??
+    raw["kitchenCategoryId"] ??
+    raw["kitchen_category_id"];
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return str(obj["id"], obj["@id"]).split("/").pop() ?? "";
+  }
+  const asString = typeof value === "number" ? `${value}` : str(value);
+  return asString.split("/").pop() ?? "";
+}
+
 export function normalizeCategory(
   raw: Record<string, unknown>,
   kind: CategoryKind,
@@ -88,12 +103,14 @@ export function normalizeCategory(
     name: str(r["name"], r["title"], "Untitled category"),
     products: num(r["products"], r["productsCount"], r["product_count"]),
     visible: bool(r["visible"] ?? r["isVisible"] ?? r["active"], true),
+    kitchenCategoryId: kitchenCategoryRef(r),
     station: str(r["station"], r["stationName"], r["screenName"]),
     screens: num(r["screens"], r["screensCount"]) || 1,
     restaurantId: restaurant.id,
     restaurantName: restaurant.name,
   };
 }
+
 
 
 async function parse(response: Response) {
