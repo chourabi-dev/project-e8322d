@@ -69,6 +69,8 @@ export const Route = createFileRoute("/categories")({
 });
 
 const ALL = "all";
+const NONE = "none";
+
 
 function CategoriesPage() {
   useRequireAuth();
