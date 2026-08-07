@@ -9,6 +9,8 @@ export type Category = {
   /** menu only */
   products: number;
   visible: boolean;
+  /** menu only — kitchen category (station) tickets are routed to */
+  kitchenCategoryId: string;
   /** kitchen only */
   station: string;
   screens: number;
@@ -20,10 +22,12 @@ export type CategoryInput = {
   kind: CategoryKind;
   name: string;
   visible: boolean;
+  kitchenCategoryId: string;
   station: string;
   screens: number;
   restaurantId: string;
 };
+
 
 
 const ENDPOINT: Record<CategoryKind, string> = {
