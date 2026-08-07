@@ -134,12 +134,14 @@ function payloadFor(input: CategoryInput, restaurantId?: string) {
   if (restaurant) base["restaurant"] = restaurant;
   if (input.kind === "menu") {
     base["visible"] = input.visible;
+    base["kitchenCategory"] = input.kitchenCategoryId || null;
   } else {
     base["station"] = input.station;
     base["screens"] = input.screens;
   }
   return base;
 }
+
 
 
 function withRestaurant(path: string, restaurantId?: string) {
