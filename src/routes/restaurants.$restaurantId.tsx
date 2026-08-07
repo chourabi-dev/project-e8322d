@@ -461,6 +461,8 @@ function CategoriesPanel({ restaurantId }: { restaurantId: string }) {
         }}
         category={editing}
         defaultKind={defaultKind}
+        lockedRestaurantId={restaurantId}
+
         saving={saveMutation.isPending}
         onSubmit={(input) => saveMutation.mutate(input)}
       />
