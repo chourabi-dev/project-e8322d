@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Tags, Flame, Pencil, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Tags,
+  Flame,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
+
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
