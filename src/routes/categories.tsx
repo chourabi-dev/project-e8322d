@@ -110,6 +110,38 @@ function CategoriesPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const [routingId, setRoutingId] = useState<string | null>(null);
+  const routeMutation = useMutation({
+    mutationFn: ({
+      category,
+      kitchenCategoryId,
+    }: {
+      category: Category;
+      kitchenCategoryId: string;
+    }) =>
+      updateCategory(
+        category.id,
+        {
+          kind: "menu",
+          name: category.name,
+          visible: category.visible,
+          kitchenCategoryId,
+          station: "",
+          screens: 1,
+          restaurantId: category.restaurantId,
+        },
+        category.restaurantId || undefined,
+      ),
+    onMutate: ({ category }) => setRoutingId(category.id),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success("Routing updated");
+    },
+    onError: (error: Error) => toast.error(error.message),
+    onSettled: () => setRoutingId(null),
+  });
+
+
   const openAdd = (kind: CategoryKind) => {
     setEditing(null);
     setDefaultKind(kind);
