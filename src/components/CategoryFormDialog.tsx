@@ -22,17 +22,26 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { Category, CategoryInput, CategoryKind } from "@/lib/categories-api";
+import {
+  fetchCategories,
+  type Category,
+  type CategoryInput,
+  type CategoryKind,
+} from "@/lib/categories-api";
 import { fetchRestaurants } from "@/lib/restaurants-api";
+
+const NONE = "none";
 
 const EMPTY: CategoryInput = {
   kind: "menu",
   name: "",
   visible: true,
+  kitchenCategoryId: "",
   station: "",
   screens: 1,
   restaurantId: "",
 };
+
 
 interface Props {
   open: boolean;
@@ -66,6 +75,14 @@ export function CategoryFormDialog({
   });
   const restaurants = restaurantsQuery.data ?? [];
 
+  const routingRestaurantId = lockedRestaurantId ?? form.restaurantId;
+  const kitchenQuery = useQuery({
+    queryKey: ["categories", "kitchen", routingRestaurantId || "all"],
+    queryFn: () => fetchCategories("kitchen", routingRestaurantId || undefined),
+    enabled: open && form.kind === "menu",
+  });
+  const kitchenCategories = kitchenQuery.data ?? [];
+
   useEffect(() => {
     if (!open) return;
     setError(null);
@@ -75,6 +92,7 @@ export function CategoryFormDialog({
             kind: category.kind,
             name: category.name,
             visible: category.visible,
+            kitchenCategoryId: category.kitchenCategoryId,
             station: category.station,
             screens: category.screens || 1,
             restaurantId: lockedRestaurantId ?? category.restaurantId,
@@ -82,6 +100,7 @@ export function CategoryFormDialog({
         : { ...EMPTY, kind: defaultKind, restaurantId: lockedRestaurantId ?? "" },
     );
   }, [open, category, defaultKind, lockedRestaurantId]);
+
 
   const set = <K extends keyof CategoryInput>(key: K, value: CategoryInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -211,19 +230,47 @@ export function CategoryFormDialog({
           </div>
 
           {form.kind === "menu" ? (
-            <div className="flex items-center justify-between rounded-xl bg-surface px-4 py-3">
-              <div>
-                <p className="text-sm font-medium">Visible on menu</p>
+            <>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="category-routing">Sends orders to</Label>
+                <Select
+                  value={form.kitchenCategoryId || NONE}
+                  onValueChange={(v) => set("kitchenCategoryId", v === NONE ? "" : v)}
+                >
+                  <SelectTrigger id="category-routing">
+                    <SelectValue
+                      placeholder={
+                        kitchenQuery.isLoading ? "Loading stations…" : "No station (not routed)"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>No station (not routed)</SelectItem>
+                    {kitchenCategories.map((k) => (
+                      <SelectItem key={k.id} value={k.id}>
+                        {k.name}
+                        {k.station ? ` · ${k.station}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground">
-                  Hidden categories stay in the back office only.
+                  Orders for dishes in this menu category appear on this kitchen station's screen.
                 </p>
               </div>
-              <Switch
-                checked={form.visible}
-                onCheckedChange={(v) => set("visible", v)}
-              />
-            </div>
+
+              <div className="flex items-center justify-between rounded-xl bg-surface px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium">Visible on menu</p>
+                  <p className="text-xs text-muted-foreground">
+                    Hidden categories stay in the back office only.
+                  </p>
+                </div>
+                <Switch checked={form.visible} onCheckedChange={(v) => set("visible", v)} />
+              </div>
+            </>
           ) : (
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="category-station">Station</Label>

@@ -9,6 +9,8 @@ export type Category = {
   /** menu only */
   products: number;
   visible: boolean;
+  /** menu only — kitchen category (station) tickets are routed to */
+  kitchenCategoryId: string;
   /** kitchen only */
   station: string;
   screens: number;
@@ -20,10 +22,12 @@ export type CategoryInput = {
   kind: CategoryKind;
   name: string;
   visible: boolean;
+  kitchenCategoryId: string;
   station: string;
   screens: number;
   restaurantId: string;
 };
+
 
 
 const ENDPOINT: Record<CategoryKind, string> = {
@@ -71,6 +75,21 @@ function restaurantRef(raw: Record<string, unknown>) {
   return { id: asString.split("/").pop() ?? "", name: "" };
 }
 
+/** kitchen category link may be an id, an IRI or a nested object. */
+function kitchenCategoryRef(raw: Record<string, unknown>) {
+  const value =
+    raw["kitchenCategory"] ??
+    raw["kitchen_category"] ??
+    raw["kitchenCategoryId"] ??
+    raw["kitchen_category_id"];
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return str(obj["id"], obj["@id"]).split("/").pop() ?? "";
+  }
+  const asString = typeof value === "number" ? `${value}` : str(value);
+  return asString.split("/").pop() ?? "";
+}
+
 export function normalizeCategory(
   raw: Record<string, unknown>,
   kind: CategoryKind,
@@ -84,12 +103,14 @@ export function normalizeCategory(
     name: str(r["name"], r["title"], "Untitled category"),
     products: num(r["products"], r["productsCount"], r["product_count"]),
     visible: bool(r["visible"] ?? r["isVisible"] ?? r["active"], true),
+    kitchenCategoryId: kitchenCategoryRef(r),
     station: str(r["station"], r["stationName"], r["screenName"]),
     screens: num(r["screens"], r["screensCount"]) || 1,
     restaurantId: restaurant.id,
     restaurantName: restaurant.name,
   };
 }
+
 
 
 async function parse(response: Response) {
@@ -113,12 +134,14 @@ function payloadFor(input: CategoryInput, restaurantId?: string) {
   if (restaurant) base["restaurant"] = restaurant;
   if (input.kind === "menu") {
     base["visible"] = input.visible;
+    base["kitchenCategory"] = input.kitchenCategoryId || null;
   } else {
     base["station"] = input.station;
     base["screens"] = input.screens;
   }
   return base;
 }
+
 
 
 function withRestaurant(path: string, restaurantId?: string) {

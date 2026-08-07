@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Tags, Flame, Pencil, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Tags,
+  Flame,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
+
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -59,6 +69,8 @@ export const Route = createFileRoute("/categories")({
 });
 
 const ALL = "all";
+const NONE = "none";
+
 
 function CategoriesPage() {
   useRequireAuth();
@@ -86,7 +98,12 @@ function CategoriesPage() {
     queryFn: () => fetchCategories("kitchen", scope),
   });
 
+  const menuCategories = menuQuery.data ?? [];
+  const kitchenCategories = kitchenQuery.data ?? [];
+  const kitchenById = new Map(kitchenCategories.map((k) => [k.id, k]));
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
+
 
   const saveMutation = useMutation({
     mutationFn: (input: CategoryInput) =>
@@ -109,6 +126,38 @@ function CategoriesPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
+  const [routingId, setRoutingId] = useState<string | null>(null);
+  const routeMutation = useMutation({
+    mutationFn: ({
+      category,
+      kitchenCategoryId,
+    }: {
+      category: Category;
+      kitchenCategoryId: string;
+    }) =>
+      updateCategory(
+        category.id,
+        {
+          kind: "menu",
+          name: category.name,
+          visible: category.visible,
+          kitchenCategoryId,
+          station: "",
+          screens: 1,
+          restaurantId: category.restaurantId,
+        },
+        category.restaurantId || undefined,
+      ),
+    onMutate: ({ category }) => setRoutingId(category.id),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success("Routing updated");
+    },
+    onError: (error: Error) => toast.error(error.message),
+    onSettled: () => setRoutingId(null),
+  });
+
 
   const openAdd = (kind: CategoryKind) => {
     setEditing(null);
@@ -239,7 +288,10 @@ function CategoriesPage() {
             </span>
           }
         >
-          {renderList(menuQuery, "menu", (c) => `${c.products} products`)}
+          {renderList(menuQuery, "menu", (c) => {
+            const target = kitchenById.get(c.kitchenCategoryId);
+            return `${c.products} products · ${target ? `→ ${target.name}` : "not routed"}`;
+          })}
         </SectionCard>
 
         <SectionCard
@@ -254,6 +306,80 @@ function CategoriesPage() {
           {renderList(kitchenQuery, "kitchen", (c) => c.station || "Unassigned station")}
         </SectionCard>
       </div>
+
+      <SectionCard
+        title="Order routing"
+        description="Pick which kitchen station receives orders for each menu category"
+        action={
+          <span className="grid size-9 place-items-center rounded-lg bg-success/12 text-success">
+            <ArrowRight className="size-4.5" />
+          </span>
+        }
+      >
+        {menuQuery.isLoading || kitchenQuery.isLoading ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : menuCategories.length === 0 ? (
+          <p className="py-6 text-sm text-muted-foreground">
+            Create a menu category first, then route it to a station.
+          </p>
+        ) : (
+          <ul className="flex flex-col">
+            {menuCategories.map((c) => {
+              const options = kitchenCategories.filter(
+                (k) => !c.restaurantId || !k.restaurantId || k.restaurantId === c.restaurantId,
+              );
+              const place = c.restaurantName || restaurantName(c.restaurantId);
+              return (
+                <li
+                  key={c.id}
+                  className="flex flex-wrap items-center gap-3 border-b border-border py-3 last:border-0"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{c.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {place || "Menu category"}
+                    </p>
+                  </div>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                  <Select
+                    value={c.kitchenCategoryId || NONE}
+                    onValueChange={(v) =>
+                      routeMutation.mutate({
+                        category: c,
+                        kitchenCategoryId: v === NONE ? "" : v,
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-full sm:w-56"
+                      aria-label={`Kitchen station for ${c.name}`}
+                    >
+                      <SelectValue placeholder="No station" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>No station (not routed)</SelectItem>
+                      {options.map((k) => (
+                        <SelectItem key={k.id} value={k.id}>
+                          {k.name}
+                          {k.station ? ` · ${k.station}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {routingId === c.id && (
+                    <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </SectionCard>
+
 
       <CategoryFormDialog
         open={formOpen}
