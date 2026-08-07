@@ -75,6 +75,14 @@ export function CategoryFormDialog({
   });
   const restaurants = restaurantsQuery.data ?? [];
 
+  const routingRestaurantId = lockedRestaurantId ?? form.restaurantId;
+  const kitchenQuery = useQuery({
+    queryKey: ["categories", "kitchen", routingRestaurantId || "all"],
+    queryFn: () => fetchCategories("kitchen", routingRestaurantId || undefined),
+    enabled: open && form.kind === "menu",
+  });
+  const kitchenCategories = kitchenQuery.data ?? [];
+
   useEffect(() => {
     if (!open) return;
     setError(null);
@@ -84,6 +92,7 @@ export function CategoryFormDialog({
             kind: category.kind,
             name: category.name,
             visible: category.visible,
+            kitchenCategoryId: category.kitchenCategoryId,
             station: category.station,
             screens: category.screens || 1,
             restaurantId: lockedRestaurantId ?? category.restaurantId,
@@ -91,6 +100,7 @@ export function CategoryFormDialog({
         : { ...EMPTY, kind: defaultKind, restaurantId: lockedRestaurantId ?? "" },
     );
   }, [open, category, defaultKind, lockedRestaurantId]);
+
 
   const set = <K extends keyof CategoryInput>(key: K, value: CategoryInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
