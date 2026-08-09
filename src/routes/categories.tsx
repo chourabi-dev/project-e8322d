@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { SectionCard } from "@/components/StatCard";
 import { CategoryFormDialog } from "@/components/CategoryFormDialog";
+import { ExtrasSection } from "@/components/ExtrasSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -379,6 +380,7 @@ function CategoriesPage() {
         )}
       </SectionCard>
 
+      <ExtrasSection restaurantId={scope} />
 
       <CategoryFormDialog
         open={formOpen}
