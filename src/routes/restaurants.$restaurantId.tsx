@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { StatCard, SectionCard } from "@/components/StatCard";
 import { CategoryFormDialog } from "@/components/CategoryFormDialog";
+import { ExtrasSection } from "@/components/ExtrasSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -452,6 +453,8 @@ function CategoriesPanel({ restaurantId }: { restaurantId: string }) {
           {renderList(kitchenQuery, "kitchen", (c) => c.station || "Unassigned station")}
         </SectionCard>
       </div>
+
+      <ExtrasSection restaurantId={restaurantId} />
 
       <CategoryFormDialog
         open={formOpen}
