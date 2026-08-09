@@ -82,8 +82,8 @@ function ExtraCategoryDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  category?: ExtraCategory | null;
-  lockedRestaurantId?: string;
+  category?: ExtraCategory | null | undefined;
+  lockedRestaurantId?: string | undefined;
   saving?: boolean;
   onSubmit: (input: ExtraCategoryInput) => void;
 }) {
@@ -229,9 +229,9 @@ function ExtraDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  extra?: Extra | null;
+  extra?: Extra | null | undefined;
   groups: ExtraCategory[];
-  defaultGroupId?: string;
+  defaultGroupId?: string | undefined;
   saving?: boolean;
   onSubmit: (input: ExtraInput) => void;
 }) {
@@ -403,7 +403,7 @@ function ExtraDialog({
 
 /* ------------------------------- section ------------------------------- */
 
-export function ExtrasSection({ restaurantId }: { restaurantId?: string }) {
+export function ExtrasSection({ restaurantId }: { restaurantId?: string | undefined }) {
   const queryClient = useQueryClient();
   const scope = restaurantId || undefined;
 
