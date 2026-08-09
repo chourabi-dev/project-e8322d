@@ -347,8 +347,7 @@ function CategoriesPage() {
                   <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
                   <Select
                     value={c.kitchenCategoryId || NONE}
-                    onValueChange={(v) =>
-                      routeMutation.mutate({
+                    onValueChange={(v) => routeMutation.mutate({
                         category: c,
                         kitchenCategoryId: v === NONE ? "" : v,
                       })
