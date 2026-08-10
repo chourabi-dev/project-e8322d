@@ -470,9 +470,9 @@ export const prepTimes = [
 
 export const activity = {
   orders: [
-    { label: "Order #104 · Marina", meta: "Delivery · 94 TND", time: "2 min ago" },
-    { label: "Order #103 · Centrale", meta: "Table 12 · 54 TND", time: "11 min ago" },
-    { label: "Order #102 · Centrale", meta: "Table 5 · 78 TND", time: "4 min ago" },
+    { label: "Order #104 · Marina", meta: "Delivery · €94", time: "2 min ago" },
+    { label: "Order #103 · Centrale", meta: "Table 12 · €54", time: "11 min ago" },
+    { label: "Order #102 · Centrale", meta: "Table 5 · €78", time: "4 min ago" },
   ],
   products: [
     { label: "Burrata & Peach", meta: "Salads · Cold Kitchen", time: "1 h ago" },
@@ -496,4 +496,4 @@ export const users = [
 ];
 
 export const currency = (n: number) =>
-  `${n.toLocaleString("en-US", { maximumFractionDigits: 0 })} TND`;
+  `€${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
