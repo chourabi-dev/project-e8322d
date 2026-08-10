@@ -75,12 +75,11 @@ function SettingsPage() {
             </div>
             <div className="grid gap-2">
               <Label>Currency</Label>
-              <Select defaultValue="tnd">
+              <Select defaultValue="eur">
                 <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tnd">TND · Tunisian Dinar</SelectItem>
                   <SelectItem value="eur">EUR · Euro</SelectItem>
                   <SelectItem value="usd">USD · US Dollar</SelectItem>
                 </SelectContent>
