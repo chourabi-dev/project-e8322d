@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQuery as useRestaurantsQuery } from "@tanstack/react-query";
 import {
@@ -10,6 +10,8 @@ import {
   CupSoda,
   ImageIcon,
   ChevronDown,
+  Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
