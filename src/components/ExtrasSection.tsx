@@ -239,7 +239,20 @@ function ExtraDialog({
 }) {
   const [form, setForm] = useState<ExtraInput>(EMPTY_EXTRA);
   const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const editing = Boolean(extra);
+
+  const pickPhoto = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return setError("Pick an image file.");
+    if (file.size > 2 * 1024 * 1024) return setError("Image must be under 2 MB.");
+    const reader = new FileReader();
+    reader.onload = () => {
+      setError(null);
+      setForm((p) => ({ ...p, photo: String(reader.result ?? "") }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (!open) return;
