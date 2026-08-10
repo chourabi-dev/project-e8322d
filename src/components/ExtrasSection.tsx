@@ -357,25 +357,60 @@ function ExtraDialog({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="extra-photo">Photo URL</Label>
-            <Input
-              id="extra-photo"
-              value={form.photo}
-              placeholder="https://…"
-              onChange={(e) => setForm((p) => ({ ...p, photo: e.target.value }))}
-            />
-            {form.photo ? (
-              <img
-                src={form.photo}
-                alt={form.name || "Extra preview"}
-                className="size-20 rounded-xl border border-border object-cover"
-              />
-            ) : (
-              <div className="grid size-20 place-items-center rounded-xl border border-dashed border-border text-muted-foreground">
-                <ImageIcon className="size-5" />
+            <Label htmlFor="extra-photo">Photo</Label>
+            <div className="flex items-center gap-3">
+              {form.photo ? (
+                <div className="relative">
+                  <img
+                    src={form.photo}
+                    alt={form.name || "Extra preview"}
+                    className="size-20 rounded-xl border border-border object-cover"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remove photo"
+                    className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-destructive"
+                    onClick={() => {
+                      setForm((p) => ({ ...p, photo: "" }));
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="grid size-20 place-items-center rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  <ImageIcon className="size-5" />
+                </button>
+              )}
+              <div className="flex flex-col items-start gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <Upload className="size-4" />
+                  {form.photo ? "Replace photo" : "Upload photo"}
+                </Button>
+                <p className="text-xs text-muted-foreground">PNG or JPG, up to 2 MB</p>
               </div>
-            )}
+            </div>
+            <input
+              ref={fileRef}
+              id="extra-photo"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => pickPhoto(e.target.files?.[0])}
+            />
           </div>
+
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="extra-description">Description</Label>
