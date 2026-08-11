@@ -28,13 +28,13 @@ import { currency, kitchenCategories, orders, restaurants } from "@/lib/mock-dat
 export const Route = createFileRoute("/orders")({
   head: () => ({
     meta: [
-      { title: "Orders · Aveline Restaurant OS" },
+      { title: "Orders · Dalu | Web master" },
       {
         name: "description",
         content:
           "Filter every order by restaurant, status, kitchen, delivery type and payment state, or jump straight to an order number.",
       },
-      { property: "og:title", content: "Orders · Aveline Restaurant OS" },
+      { property: "og:title", content: "Orders · Dalu | Web master" },
       { property: "og:description", content: "One table for every ticket across every location." },
     ],
   }),

@@ -101,7 +101,7 @@ export function RestaurantFormDialog({
                 id="r-name"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                placeholder="Aveline Centrale"
+                placeholder="Dalu Centrale"
                 autoFocus
               />
             </div>

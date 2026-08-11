@@ -18,13 +18,13 @@ import { fetchRestaurants } from "@/lib/restaurants-api";
 export const Route = createFileRoute("/products")({
   head: () => ({
     meta: [
-      { title: "Products · Aveline Restaurant OS" },
+      { title: "Products · Dalu | Web master" },
       {
         name: "description",
         content:
           "Pick a restaurant, then create and manage dishes with price, photo, menu category and the extras groups customers can add.",
       },
-      { property: "og:title", content: "Products · Aveline Restaurant OS" },
+      { property: "og:title", content: "Products · Dalu | Web master" },
       {
         property: "og:description",
         content: "Manage your menu per restaurant: prices, photos, categories and extras.",
@@ -70,7 +70,11 @@ function ProductsPage() {
       </div>
 
       {restaurantId ? (
-        <ProductsSection restaurantId={restaurantId} restaurantName={selected?.name} />
+        <ProductsSection
+          restaurantId={restaurantId}
+          restaurantName={selected?.name}
+          view="table"
+        />
       ) : (
         <div className="panel flex flex-col items-center gap-3 px-6 py-20 text-center">
           <span className="grid size-12 place-items-center rounded-2xl bg-surface">

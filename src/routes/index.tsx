@@ -14,13 +14,13 @@ import { useTheme } from "@/lib/theme";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sign in · Dalu Restaurant OS" },
+      { title: "Sign in · Dalu | Web master" },
       {
         name: "description",
         content:
           "Sign in to Dalu to manage restaurants, menus, kitchen display screens and live orders.",
       },
-      { property: "og:title", content: "Sign in · Dalu Restaurant OS" },
+      { property: "og:title", content: "Sign in · Dalu | Web master" },
       {
         property: "og:description",
         content: "One login for every restaurant, kitchen screen and menu you operate.",

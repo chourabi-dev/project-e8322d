@@ -22,6 +22,14 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -335,8 +343,10 @@ export function ProductsSection({
   restaurantId,
   restaurantName,
   onCountChange,
+  view = "cards",
 }: {
   restaurantId: string;
+  view?: "cards" | "table";
   restaurantName?: string | undefined;
   onCountChange?: ((count: number) => void) | undefined;
 }) {
@@ -486,6 +496,102 @@ export function ProductsSection({
           <Button className="mt-2 gap-2" onClick={openAdd}>
             <Plus className="size-4" /> Add product
           </Button>
+        </div>
+      ) : view === "table" ? (
+        <div className="panel overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Menu category</TableHead>
+                <TableHead>Extras groups</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead>Available</TableHead>
+                <TableHead className="w-24 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {p.photo ? (
+                        <img
+                          src={p.photo}
+                          alt={p.name}
+                          loading="lazy"
+                          className="size-10 shrink-0 rounded-lg border border-border object-cover"
+                        />
+                      ) : (
+                        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-surface text-muted-foreground">
+                          <ImageIcon className="size-4" />
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{p.name}</p>
+                        {p.description && (
+                          <p className="max-w-[280px] truncate text-xs text-muted-foreground">
+                            {p.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {categoryName(p)}
+                  </TableCell>
+                  <TableCell>
+                    {p.extraCategoryIds.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.extraCategoryIds.map((id) => (
+                          <Badge key={id} variant="outline">
+                            {groupName(id)}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="num text-right text-sm font-semibold">
+                    {currency(p.price)}
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={p.available}
+                      aria-label={`Toggle availability for ${p.name}`}
+                      onCheckedChange={() => toggleMutation.mutate(p)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        aria-label={`Edit ${p.name}`}
+                        onClick={() => {
+                          setEditing(p);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-destructive"
+                        aria-label={`Delete ${p.name}`}
+                        onClick={() => setPendingDelete(p)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

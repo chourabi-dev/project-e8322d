@@ -22,13 +22,13 @@ import { useTheme } from "@/lib/theme";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings · Aveline Restaurant OS" },
+      { title: "Settings · Dalu | Web master" },
       {
         name: "description",
         content:
           "Business information, taxes, currency, language, theme, notifications and kitchen display preferences.",
       },
-      { property: "og:title", content: "Settings · Aveline Restaurant OS" },
+      { property: "og:title", content: "Settings · Dalu | Web master" },
       { property: "og:description", content: "Tune the platform to how your restaurants actually run." },
     ],
   }),
@@ -54,7 +54,7 @@ function SettingsPage() {
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="legal">Legal name</Label>
-              <Input id="legal" defaultValue="Aveline Hospitality Group" className="h-10" />
+              <Input id="legal" defaultValue="Dalu Hospitality Group" className="h-10" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="vat">VAT / Tax ID</Label>

@@ -32,13 +32,13 @@ import {
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics · Aveline Restaurant OS" },
+      { title: "Analytics · Dalu | Web master" },
       {
         name: "description",
         content:
           "Revenue, peak hours, kitchen performance, preparation times and category sales, compared across restaurants.",
       },
-      { property: "og:title", content: "Analytics · Aveline Restaurant OS" },
+      { property: "og:title", content: "Analytics · Dalu | Web master" },
       { property: "og:description", content: "Compare locations, stations and categories at a glance." },
     ],
   }),

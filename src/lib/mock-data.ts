@@ -60,7 +60,7 @@ export type Order = {
 export const restaurants: Restaurant[] = [
   {
     id: "aveline-centrale",
-    name: "Aveline Centrale",
+    name: "Dalu Centrale",
     tagline: "Wood-fired Italian · Downtown",
     address: "14 Rue de la Kasbah, Tunis",
     phone: "+216 71 220 118",
@@ -77,7 +77,7 @@ export const restaurants: Restaurant[] = [
   },
   {
     id: "aveline-marina",
-    name: "Aveline Marina",
+    name: "Dalu Marina",
     tagline: "Seafood & grill · Marina",
     address: "Quai 7, La Marsa",
     phone: "+216 71 884 902",
@@ -94,7 +94,7 @@ export const restaurants: Restaurant[] = [
   },
   {
     id: "aveline-atelier",
-    name: "Aveline Atelier",
+    name: "Dalu Atelier",
     tagline: "Pastry & coffee bar",
     address: "3 Avenue Habib Bourguiba, Tunis",
     phone: "+216 71 331 447",
@@ -111,7 +111,7 @@ export const restaurants: Restaurant[] = [
   },
   {
     id: "aveline-nord",
-    name: "Aveline Nord",
+    name: "Dalu Nord",
     tagline: "Neighbourhood bistro",
     address: "22 Rue du Lac, Les Berges du Lac",
     phone: "+216 71 909 220",
@@ -230,7 +230,7 @@ export const products: Product[] = [
   },
   {
     id: "p6",
-    name: "Aveline Burger",
+    name: "Dalu Burger",
     description: "Dry-aged patty, aged cheddar, pickled onion, house sauce.",
     sku: "BR-002",
     price: 32,
@@ -363,7 +363,7 @@ export const orders: Order[] = [
     priority: "Normal",
     items: [
       { name: "Charcoal Ribeye", qty: 1, kitchenCategory: "Grill" },
-      { name: "Aveline Burger", qty: 1, kitchenCategory: "Grill" },
+      { name: "Dalu Burger", qty: 1, kitchenCategory: "Grill" },
       { name: "Negroni Barrel-Aged", qty: 1, kitchenCategory: "Drinks Bar" },
     ],
   },
@@ -407,7 +407,7 @@ export const orders: Order[] = [
     payment: "Refunded",
     total: 46,
     priority: "Normal",
-    items: [{ name: "Aveline Burger", qty: 1, kitchenCategory: "Grill" }],
+    items: [{ name: "Dalu Burger", qty: 1, kitchenCategory: "Grill" }],
   },
 ];
 
@@ -440,7 +440,7 @@ export const revenueEvolution = [
 export const topProducts = [
   { name: "Margherita", sold: 412 },
   { name: "Carbonara", sold: 366 },
-  { name: "Aveline Burger", sold: 298 },
+  { name: "Dalu Burger", sold: 298 },
   { name: "Tiramisu", sold: 254 },
   { name: "Negroni", sold: 191 },
 ];
@@ -480,9 +480,9 @@ export const activity = {
     { label: "Charcoal Ribeye", meta: "Grill · price updated", time: "Yesterday" },
   ],
   restaurants: [
-    { label: "Aveline Nord", meta: "Set to inactive · kitchen refit", time: "2 d ago" },
-    { label: "Aveline Marina", meta: "Delivery disabled", time: "3 d ago" },
-    { label: "Aveline Atelier", meta: "Hours extended to 20:00", time: "5 d ago" },
+    { label: "Dalu Nord", meta: "Set to inactive · kitchen refit", time: "2 d ago" },
+    { label: "Dalu Marina", meta: "Delivery disabled", time: "3 d ago" },
+    { label: "Dalu Atelier", meta: "Hours extended to 20:00", time: "5 d ago" },
   ],
 };
 
