@@ -34,6 +34,7 @@ import { AppShell } from "@/components/AppShell";
 import { StatCard, SectionCard } from "@/components/StatCard";
 import { CategoryFormDialog } from "@/components/CategoryFormDialog";
 import { ExtrasSection } from "@/components/ExtrasSection";
+import { ProductsSection } from "@/components/ProductsSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +50,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRequireAuth } from "@/lib/auth";
-import { currency, orders, products, revenueEvolution } from "@/lib/mock-data";
+import { currency, orders, revenueEvolution } from "@/lib/mock-data";
 import { fetchRestaurant } from "@/lib/restaurants-api";
 import {
   createCategory,
@@ -91,7 +92,6 @@ function RestaurantDetail() {
   });
 
   const restaurant = restaurantQuery.data;
-  const own = products.filter((p) => p.restaurantId === restaurantId);
   const ownOrders = orders.filter((o) => o.restaurantId === restaurantId);
 
   if (restaurantQuery.isLoading) {
@@ -177,7 +177,6 @@ function RestaurantDetail() {
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-5 flex flex-col gap-4">
@@ -216,22 +215,7 @@ function RestaurantDetail() {
         </TabsContent>
 
         <TabsContent value="products" className="mt-5">
-          <SectionCard title="Products" description={`${own.length} items assigned to this restaurant`}>
-            <ul className="flex flex-col">
-              {own.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-4 border-b border-border py-3 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.menuCategory} → {p.kitchenCategory} · {p.prepMinutes} min
-                    </p>
-                  </div>
-                  <span className="num text-sm">{currency(p.discountPrice ?? p.price)}</span>
-                </li>
-              ))}
-              {own.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No products yet.</p>}
-            </ul>
-          </SectionCard>
+          <ProductsSection restaurantId={restaurantId} restaurantName={restaurant.name} />
         </TabsContent>
 
         <TabsContent value="categories" className="mt-5">
@@ -262,22 +246,6 @@ function RestaurantDetail() {
           </SectionCard>
         </TabsContent>
 
-        <TabsContent value="stats" className="mt-5">
-          <SectionCard title="Statistics" description="Kitchen and sales performance">
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[
-                { k: "Peak hour", v: "20:00" },
-                { k: "Table turn", v: "68 min" },
-                { k: "Monthly growth", v: "+7.4%" },
-              ].map((s) => (
-                <div key={s.k} className="rounded-xl bg-surface p-4">
-                  <p className="num text-xl font-semibold">{s.v}</p>
-                  <p className="text-xs text-muted-foreground">{s.k}</p>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        </TabsContent>
       </Tabs>
     </AppShell>
   );
