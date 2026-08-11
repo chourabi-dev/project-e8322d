@@ -70,7 +70,11 @@ function ProductsPage() {
       </div>
 
       {restaurantId ? (
-        <ProductsSection restaurantId={restaurantId} restaurantName={selected?.name} />
+        <ProductsSection
+          restaurantId={restaurantId}
+          restaurantName={selected?.name}
+          view="table"
+        />
       ) : (
         <div className="panel flex flex-col items-center gap-3 px-6 py-20 text-center">
           <span className="grid size-12 place-items-center rounded-2xl bg-surface">
