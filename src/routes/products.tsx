@@ -18,13 +18,13 @@ import { fetchRestaurants } from "@/lib/restaurants-api";
 export const Route = createFileRoute("/products")({
   head: () => ({
     meta: [
-      { title: "Products · Aveline Restaurant OS" },
+      { title: "Products · Dalu | Web master" },
       {
         name: "description",
         content:
           "Pick a restaurant, then create and manage dishes with price, photo, menu category and the extras groups customers can add.",
       },
-      { property: "og:title", content: "Products · Aveline Restaurant OS" },
+      { property: "og:title", content: "Products · Dalu | Web master" },
       {
         property: "og:description",
         content: "Manage your menu per restaurant: prices, photos, categories and extras.",

@@ -44,13 +44,13 @@ import {
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard · Aveline Restaurant OS" },
+      { title: "Dashboard · Dalu | Web master" },
       {
         name: "description",
         content:
           "Live overview of orders, revenue, kitchen load and product performance across all your restaurants.",
       },
-      { property: "og:title", content: "Dashboard · Aveline Restaurant OS" },
+      { property: "og:title", content: "Dashboard · Dalu | Web master" },
       {
         property: "og:description",
         content: "Orders, revenue and kitchen performance across every location, in real time.",

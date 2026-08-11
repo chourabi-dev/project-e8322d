@@ -14,13 +14,13 @@ import { kitchenCategories, orders as seedOrders, type OrderItem } from "@/lib/m
 export const Route = createFileRoute("/kitchen")({
   head: () => ({
     meta: [
-      { title: "Kitchen Screens · Aveline Restaurant OS" },
+      { title: "Kitchen Screens · Dalu | Web master" },
       {
         name: "description",
         content:
           "Live kitchen display system: each station screen receives only the items routed to its kitchen category, updating in real time.",
       },
-      { property: "og:title", content: "Kitchen Screens · Aveline Restaurant OS" },
+      { property: "og:title", content: "Kitchen Screens · Dalu | Web master" },
       {
         property: "og:description",
         content: "Paperless tickets that animate in, escalate with time and sync across stations.",

@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aveline — Restaurant Operations Platform" },
+      { title: "Dalu | Web master — Restaurant Operations Platform" },
       {
         name: "description",
         content:
-          "Aveline is a multi-restaurant management platform with live kitchen displays, menu control and revenue analytics.",
+          "Dalu | Web master is a multi-restaurant management platform with live kitchen displays, menu control and revenue analytics.",
       },
-      { property: "og:title", content: "Aveline — Restaurant Operations Platform" },
+      { property: "og:title", content: "Dalu | Web master — Restaurant Operations Platform" },
       {
         property: "og:description",
         content: "Run every restaurant, kitchen screen and menu from one premium dashboard.",

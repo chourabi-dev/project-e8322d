@@ -53,13 +53,13 @@ import { fetchRestaurants } from "@/lib/restaurants-api";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "Categories · Aveline Restaurant OS" },
+      { title: "Categories · Dalu | Web master" },
       {
         name: "description",
         content:
           "Two independent systems: menu categories that shape the customer menu, and kitchen categories that route dishes to the right station screen.",
       },
-      { property: "og:title", content: "Categories · Aveline Restaurant OS" },
+      { property: "og:title", content: "Categories · Dalu | Web master" },
       {
         property: "og:description",
         content: "Menu categories for guests, kitchen categories for stations.",

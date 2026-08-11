@@ -21,13 +21,13 @@ import { users } from "@/lib/mock-data";
 export const Route = createFileRoute("/users")({
   head: () => ({
     meta: [
-      { title: "Users & Permissions · Aveline Restaurant OS" },
+      { title: "Users & Permissions · Dalu | Web master" },
       {
         name: "description",
         content:
           "Role-based access for administrators, restaurant managers, kitchen staff, cashiers and viewers.",
       },
-      { property: "og:title", content: "Users & Permissions · Aveline Restaurant OS" },
+      { property: "og:title", content: "Users & Permissions · Dalu | Web master" },
       { property: "og:description", content: "Give every role exactly the access it needs." },
     ],
   }),

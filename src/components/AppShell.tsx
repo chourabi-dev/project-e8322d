@@ -46,7 +46,7 @@ function Brand({ compact }: { compact?: boolean | undefined }) {
       </span>
       {!compact && (
         <span className="leading-tight">
-          <span className="block font-display text-sm font-semibold">Aveline</span>
+          <span className="block font-display text-sm font-semibold">Dalu</span>
           <span className="block text-[11px] text-muted-foreground">Restaurant OS</span>
         </span>
       )}

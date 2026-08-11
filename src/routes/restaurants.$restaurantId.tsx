@@ -65,13 +65,13 @@ import {
 export const Route = createFileRoute("/restaurants/$restaurantId")({
   head: () => ({
     meta: [
-      { title: "Restaurant details · Aveline Restaurant OS" },
+      { title: "Restaurant details · Dalu | Web master" },
       {
         name: "description",
         content:
           "Live performance, products, menu and kitchen categories for a single restaurant location.",
       },
-      { property: "og:title", content: "Restaurant details · Aveline Restaurant OS" },
+      { property: "og:title", content: "Restaurant details · Dalu | Web master" },
       {
         property: "og:description",
         content: "One location: metrics, products, categories and kitchen routing.",
