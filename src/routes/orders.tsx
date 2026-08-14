@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Filter } from "lucide-react";
+import pusher from "../services/pusher";
+
 
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
@@ -73,6 +75,33 @@ function OrdersPage() {
     [query, restaurant, status, station, type, payment],
   );
 
+
+
+
+
+   useEffect(() => {
+
+        console.log("PINGIN...");
+        
+        const channel = pusher.subscribe(
+            "channel-6a746e41ba652"
+        );
+
+        channel.bind("new-order", (data:any) => {
+            console.log("🔥 NEW ORDER");
+            console.log(data);
+        });
+
+        return () => {
+            channel.unbind("new-order");
+            pusher.unsubscribe(
+                "restaurant-6a746e41ba652"
+            );
+        };
+
+    }, []);
+
+ 
   return (
     <AppShell title="Orders" subtitle={`${filtered.length} of ${orders.length} orders shown`}>
       <div className="panel flex flex-wrap items-center gap-3 p-3">

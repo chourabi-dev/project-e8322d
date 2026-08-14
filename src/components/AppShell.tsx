@@ -33,9 +33,9 @@ const nav = [
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/kitchen", label: "Kitchen Screens", icon: MonitorPlay },
   { to: "/orders", label: "Orders", icon: ReceiptText },
-  { to: "/analytics", label: "Analytics", icon: ChartNoAxesCombined },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/settings", label: "Settings", icon: Settings },
+  //{ to: "/analytics", label: "Analytics", icon: ChartNoAxesCombined },
+  //{ to: "/users", label: "Users", icon: Users },
+  //{ to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 function Brand({ compact }: { compact?: boolean | undefined }) {
@@ -182,16 +182,20 @@ export function AppShell({
             <ChevronsLeft className={cn("size-5 transition-transform", compact && "rotate-180")} />
           </Button>
 
-          <div className="relative hidden max-w-xs flex-1 md:block">
+           {
+            /**<div className="relative hidden max-w-xs flex-1 md:block">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search orders, products…" className="h-9 bg-background/60 pl-9" />
-          </div>
+          </div> */
+           }
 
           <div className="ml-auto flex items-center gap-1.5">
-            <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+            {
+              /**<Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
               <Bell className="size-5" />
               <span className="absolute top-2 right-2 size-2 rounded-full bg-primary" />
-            </Button>
+            </Button> */
+            }
             <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
               {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
             </Button>
