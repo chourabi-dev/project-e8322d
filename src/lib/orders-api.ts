@@ -8,6 +8,9 @@ export type OrderExtra = {
   price: number;
 };
 
+/** Per-item kitchen prep state, tracked independently from the order-level status. */
+export type ItemPrepStatus = "pending" | "preparing" | "ready";
+
 /** One line of an order: a product, its quantity, its own note and its extras. */
 export type OrderItem = {
   id: string;
@@ -17,6 +20,10 @@ export type OrderItem = {
   quantity: number;
   note: string;
   extras: OrderExtra[];
+  /** Kitchen category (station) this item is routed to, matches a /api/kitchen_categories id. */
+  kitchenLine: string;
+  /** Where this item is in the kitchen: pending → preparing → ready. */
+  prepStatus: ItemPrepStatus;
 };
 
 export type OrderStatus = string;
@@ -26,7 +33,6 @@ export type PaymentMethod = "cash" | "card" | "online" | string;
 export type Order = {
   id: string;
   restaurantId: string;
-  orderNumber: string;
   status: OrderStatus;
   kitchenStatus: string;
   type: OrderType;
@@ -38,6 +44,7 @@ export type Order = {
   clientEmail: string;
   clientName: string;
   items: OrderItem[];
+  orderNumber:string;
 };
 
 const ORDERS = "/api/orders";
@@ -77,6 +84,7 @@ function normalizeExtra(raw: Record<string, unknown>): OrderExtra {
 
 function normalizeItem(raw: Record<string, unknown>): OrderItem {
   const extrasRaw = raw["extras"];
+  const prepStatus = str(raw["prepStatus"], raw["status"], raw["itemStatus"]).toLowerCase();
   return {
     id: str(`${raw["id"] ?? ""}`),
     productID: str(raw["productID"], raw["productId"], raw["product_id"]),
@@ -87,6 +95,11 @@ function normalizeItem(raw: Record<string, unknown>): OrderItem {
     extras: Array.isArray(extrasRaw)
       ? (extrasRaw as Record<string, unknown>[]).map(normalizeExtra)
       : [],
+    kitchenLine:
+      str(raw["kitchenLine"], raw["kitchen_line"], raw["kitchenLineId"], raw["kitchenCategoryId"])
+        .split("/")
+        .pop() ?? "",
+    prepStatus: prepStatus === "preparing" || prepStatus === "ready" ? prepStatus : "pending",
   };
 }
 
@@ -151,6 +164,42 @@ export async function markOrderPaidAndSend(id: string): Promise<Order> {
   return normalizeOrder((payload as Record<string, unknown>) ?? { id, status: "pending" });
 }
 
+/**
+ * Updates one order item's kitchen prep status. Used by the kitchen board when a
+ * station employee hits "Start" (→ preparing) or "Ready" (→ ready) on a ticket —
+ * only the items that belong to their station are touched.
+ */
+export async function updateItemPrepStatus(
+  orderId: string,
+  itemId: string,
+  prepStatus: ItemPrepStatus,
+): Promise<void> {
+  await parse(
+    await api(`${ORDERS}/${orderId}/items/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: prepStatus }),
+    }),
+  );
+}
+
+/** Convenience for starting/readying every item a station owns on one ticket at once. */
+export async function updateItemsPrepStatus(
+  orderId: string,
+  itemIds: string[],
+  prepStatus: ItemPrepStatus,
+): Promise<void> {
+  await Promise.all(itemIds.map((itemId) => updateItemPrepStatus(orderId, itemId, prepStatus)));
+}
+
+export function isOrderPaid(order: Order): boolean {
+  return order.status.toLowerCase() !== "unpayed";
+}
+
+/** An order is fully ready for the pass only once every item, across every station, is ready. */
+export function isOrderFullyReady(order: Order): boolean {
+  return order.items.length > 0 && order.items.every((item) => item.prepStatus === "ready");
+}
+
 /** Parses the API's "13-08-2026 03:15" (dd-mm-yyyy HH:mm) format into a Date. */
 export function parseOrderDate(value: string): Date | null {
   const match = /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/.exec(value);
@@ -167,4 +216,9 @@ export function orderItemTotal(item: OrderItem): number {
 
 export function orderTotal(order: Order): number {
   return order.items.reduce((sum, item) => sum + orderItemTotal(item), 0);
+}
+
+
+export async function archiveOrder(id: string): Promise<void> {
+  await parse(await api(`${ORDERS}/${id}/archive`, { method: "PATCH" }));
 }

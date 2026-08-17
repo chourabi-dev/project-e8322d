@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, Filter, ChefHat, Loader2, RefreshCw, Banknote } from "lucide-react";
+import { Search, Filter, ChefHat, Loader2, RefreshCw, Banknote, Archive } from "lucide-react";
 import { toast } from "sonner";
 import pusher from "../services/pusher";
 
@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/lib/auth";
 import { fetchRestaurants } from "@/lib/restaurants-api";
 import {
+  archiveOrder,
   fetchOrders,
   markOrderPaidAndSend,
   orderItemTotal,
@@ -157,6 +158,15 @@ function OrdersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: (order: Order) => archiveOrder(order.id),
+    onSuccess: (_result, order) => {
+      toast.success(`Order #${order.orderNumber.toUpperCase()} archived`);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const filtered = useMemo(
     () =>
       list.filter(
@@ -176,14 +186,31 @@ function OrdersPage() {
   useEffect(() => {
     const channel = pusher.subscribe("channel-orders");
 
+    channel.bind_global((eventName: string, data: unknown) => {
+      if (eventName.startsWith("pusher:")) return;
+       
+      if (eventName === "order-ready") {
+        invalidate();
+        toast.success("order in", { description: "Order ready" });
+      }
+    });
+ 
+    
+
     channel.bind("new-order", (data: unknown) => {
       console.log("🔥 NEW ORDER", data);
       toast.success("New order received");
       invalidate();
     });
 
+
+    
+
+    
+
     return () => {
-      channel.unbind("new-order");
+      channel.unbind("new-order"); 
+      channel.unbind_global();
       pusher.unsubscribe("channel-orders");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -341,7 +368,7 @@ function OrdersPage() {
                 return (
                   <TableRow key={o.id}>
                     <TableCell>
-                      <p className="num text-sm font-semibold">#{o.orderNumber }</p>
+                      <p className="num text-sm font-semibold">#{o.orderNumber}</p>
                       <p className="text-xs text-muted-foreground">
                         {o.clientName || o.clientEmail} · {orderTime(o.createdAt)}
                       </p>
@@ -403,13 +430,27 @@ function OrdersPage() {
                     </TableCell>
                     <TableCell className="num text-right text-sm">{money(orderTotal(o))}</TableCell>
                     <TableCell className="text-right">
-                      {canSendToKitchen ? (
-                        <Button size="sm" className="gap-1.5" onClick={() => setPendingSend(o)}>
-                          <ChefHat className="size-3.5" /> Send to kitchen
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                      <div className="flex justify-end gap-1.5">
+                        {canSendToKitchen && (
+                          <Button size="sm" className="gap-1.5" onClick={() => setPendingSend(o)}>
+                            <ChefHat className="size-3.5" /> Send to kitchen
+                          </Button>
+                        )}
+                        {o.kitchenStatus.toLowerCase() === "ready" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5"
+                            disabled={archiveMutation.isPending}
+                            onClick={() => archiveMutation.mutate(o)}
+                          >
+                            <Archive className="size-3.5" /> Archive
+                          </Button>
+                        )}
+                        {!canSendToKitchen && o.kitchenStatus.toLowerCase() !== "ready" && (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
