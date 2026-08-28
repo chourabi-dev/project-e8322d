@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, Filter, ChefHat, Loader2, RefreshCw, Banknote, Archive } from "lucide-react";
+import {
+  Search,
+  Filter,
+  ChefHat,
+  Loader2,
+  RefreshCw,
+  Banknote,
+  Archive,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import pusher from "../services/pusher";
 
@@ -38,13 +48,18 @@ import {
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/lib/auth";
 import { fetchRestaurants } from "@/lib/restaurants-api";
+import { NewOrderDialog } from "@/components/NewOrderDialog";
+import { OrderQrDialog } from "@/components/OrderQrDialog";
 import {
   archiveOrder,
+  createOrder,
+  deleteOrder,
   fetchOrders,
   markOrderPaidAndSend,
   orderItemTotal,
   orderTotal,
   parseOrderDate,
+  type NewOrderInput,
   type Order,
 } from "@/lib/orders-api";
 
@@ -121,6 +136,9 @@ function OrdersPage() {
   const [type, setType] = useState("all");
   const [payment, setPayment] = useState("all");
   const [pendingSend, setPendingSend] = useState<Order | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Order | null>(null);
+  const [newOrderOpen, setNewOrderOpen] = useState(false);
+  const [qrOrder, setQrOrder] = useState<Order | null>(null);
 
   const {
     data: orders,
@@ -162,6 +180,28 @@ function OrdersPage() {
     mutationFn: (order: Order) => archiveOrder(order.id),
     onSuccess: (_result, order) => {
       toast.success(`Order #${order.orderNumber.toUpperCase()} archived`);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (input: NewOrderInput) => createOrder(input),
+    onSuccess: (order) => {
+      toast.success("Order created");
+      setNewOrderOpen(false);
+      invalidate();
+      // Offer the loyalty QR right away so staff can hand it to the client.
+      setQrOrder(order);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (order: Order) => deleteOrder(order.id),
+    onSuccess: (_result, order) => {
+      toast.success(`Order #${(order.orderNumber || order.id).toUpperCase()} deleted`);
+      setPendingDelete(null);
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -221,9 +261,14 @@ function OrdersPage() {
       title="Orders"
       subtitle={isLoading ? "Loading orders…" : `${filtered.length} of ${list.length} orders shown`}
       actions={
-        <Button variant="outline" size="icon" onClick={() => refetch()} aria-label="Refresh">
-          <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => refetch()} aria-label="Refresh">
+            <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
+          </Button>
+          <Button className="gap-2" onClick={() => setNewOrderOpen(true)}>
+            <Plus className="size-4" /> New order
+          </Button>
+        </div>
       }
     >
       <div className="panel flex flex-wrap items-center gap-3 p-3">
@@ -447,9 +492,15 @@ function OrdersPage() {
                             <Archive className="size-3.5" /> Archive
                           </Button>
                         )}
-                        {!canSendToKitchen && o.kitchenStatus.toLowerCase() !== "ready" && (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="size-8 p-0 text-destructive"
+                          aria-label={`Delete order #${o.orderNumber}`}
+                          onClick={() => setPendingDelete(o)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -496,6 +547,52 @@ function OrdersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete order #{pendingDelete?.orderNumber}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Use this for a false or mistaken order. This permanently removes it from the list
+              and can't be undone — for orders you just want to keep a record of, archive them
+              instead.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingDelete) deleteMutation.mutate(pendingDelete);
+              }}
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                "Delete order"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <NewOrderDialog
+        open={newOrderOpen}
+        onOpenChange={setNewOrderOpen}
+        restaurants={restaurantOptions}
+        saving={createMutation.isPending}
+        onSubmit={(input) => createMutation.mutate(input)}
+      />
+
+      <OrderQrDialog
+        open={Boolean(qrOrder)}
+        onOpenChange={(open) => !open && setQrOrder(null)}
+        order={qrOrder}
+      />
     </AppShell>
   );
 }

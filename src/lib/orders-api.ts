@@ -222,3 +222,77 @@ export function orderTotal(order: Order): number {
 export async function archiveOrder(id: string): Promise<void> {
   await parse(await api(`${ORDERS}/${id}/archive`, { method: "PATCH" }));
 }
+
+/** One line item when placing a manual order from the web master. */
+export type NewOrderItemInput = {
+  productId: string;
+  quantity: number;
+  extraOptionIds: string[];
+  note?: string;
+};
+
+/**
+ * Payload for a staff-created order (walk-in / phone order — the client didn't
+ * use the ordering app). Mirrors the contract the client app's checkout uses
+ * against `POST /api/orders`, so the same backend endpoint handles both.
+ */
+export type NewOrderInput = {
+  restaurantId: string;
+  type: OrderType;
+  paymentMethod: PaymentMethod;
+  deliveryAddress?: string;
+  pickupTime?: string;
+  phone?: string;
+  note?: string;
+  clientName?: string;
+  clientEmail?: string;
+  items: NewOrderItemInput[];
+};
+
+function newOrderPayload(input: NewOrderInput) {
+  const body: Record<string, unknown> = {
+    restaurantId: input.restaurantId,
+    fulfillmentType: input.type,
+    paymentMethod: input.paymentMethod,
+    items: input.items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      extraOptionIds: item.extraOptionIds,
+      ...(item.note?.trim() ? { notes: item.note.trim() } : {}),
+    })),
+  };
+  if (input.type === "delivery" && input.deliveryAddress) {
+    body["deliveryAddress"] = input.deliveryAddress;
+  }
+  if (input.type === "pickup" && input.pickupTime) {
+    body["pickupTime"] = input.pickupTime;
+  }
+  if (input.phone) body["phone"] = input.phone;
+  if (input.note) body["notes"] = input.note;
+  // Manual orders taken by staff often don't have a registered client — send
+  // whatever contact info was collected so it shows up on the ticket.
+  if (input.clientName) body["clientName"] = input.clientName;
+  if (input.clientEmail) body["clientEmail"] = input.clientEmail;
+  return body;
+}
+
+/**
+ * Places a manual order on behalf of a client who isn't using the ordering
+ * app (walk-in table, phone order, etc). Returns the created order so the
+ * caller can show its number / QR code right away.
+ */
+export async function createOrder(input: NewOrderInput): Promise<Order> {
+  const payload = await parse(
+    await api(ORDERS, { method: "POST", body: JSON.stringify(newOrderPayload(input)) }),
+  );
+  return normalizeOrder((payload as Record<string, unknown>) ?? {});
+}
+
+/**
+ * Permanently deletes an order — for false/duplicate/mistaken entries.
+ * Unlike archiving (which keeps completed orders around), this removes the
+ * order from the list entirely.
+ */
+export async function deleteOrder(id: string): Promise<void> {
+  await parse(await api(`${ORDERS}/${id}`, { method: "DELETE" }));
+}
