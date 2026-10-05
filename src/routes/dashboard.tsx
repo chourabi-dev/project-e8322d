@@ -106,12 +106,16 @@ function DashboardPage() {
       subtitle="Thursday · all restaurants · live data"
       actions={
         <>
-          <Button variant="outline" className="gap-2">
+          {
+            /**<Button variant="outline" className="gap-2">
             <CalendarRange className="size-4" /> Today
           </Button>
+          
           <Button className="gap-2">
             <Plus className="size-4" /> New order
           </Button>
+           */
+          }
         </>
       }
     >
@@ -232,7 +236,9 @@ function DashboardPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <SectionCard title="Recent activity" className="xl:col-span-2">
+        {
+          /**
+           * <SectionCard title="Recent activity" className="xl:col-span-2">
           <Tabs defaultValue="orders">
             <TabsList>
               <TabsTrigger value="orders">New orders</TabsTrigger>
@@ -250,6 +256,9 @@ function DashboardPage() {
             </TabsContent>
           </Tabs>
         </SectionCard>
+        
+           */
+        }
 
         <SectionCard title="Quick actions">
           <div className="grid gap-2">

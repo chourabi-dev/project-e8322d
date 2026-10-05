@@ -7,6 +7,7 @@ import {
   BellOff,
   ChefHat,
   Clock,
+  ClipboardList,
   Flame,
   Loader2,
   RefreshCw,
@@ -224,6 +225,22 @@ function KitchenPage() {
 
   const counts = (s: TicketStatus) => tickets.filter((t) => ticketStatus(t.items) === s).length;
 
+  // Prep summary — how many of each product still need to be made across every
+  // open ticket on this station, so the cook can batch-prep instead of reading
+  // ticket by ticket (e.g. "6× Fries, 3× Burger" before diving into individual cards).
+  const prepSummary = useMemo(() => {
+    const byName = new Map<string, number>();
+    for (const t of active) {
+      for (const i of t.items) {
+        if (i.prepStatus === "ready") continue;
+        byName.set(i.name, (byName.get(i.name) ?? 0) + i.quantity);
+      }
+    }
+    return [...byName.entries()]
+      .map(([name, quantity]) => ({ name, quantity }))
+      .sort((a, b) => b.quantity - a.quantity || a.name.localeCompare(b.name));
+  }, [active]);
+
   const prepMutation = useMutation({
     mutationFn: ({
       order,
@@ -362,6 +379,26 @@ function KitchenPage() {
         </>
       }
     >
+      {prepSummary.length > 0 && (
+        <div className="panel flex flex-col gap-3 p-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <ClipboardList className="size-4" />
+            Prep summary · what's left to make
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {prepSummary.map((p) => (
+              <span
+                key={p.name}
+                className="num flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary"
+              >
+                <span className="num">{p.quantity}×</span>
+                <span className="font-medium text-foreground">{p.name}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-3">
         {(["pending", "preparing", "ready"] as const).map((s) => (
           <div key={s} className={cn("rounded-xl border px-4 py-3", statusStyles[s])}>

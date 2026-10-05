@@ -42,14 +42,14 @@ const money = (n: number) => `€${n.toFixed(2)}`;
 
 const TYPE_OPTIONS: { value: OrderType; label: string }[] = [
   { value: "dine_in", label: "Dine-in" },
-  { value: "delivery", label: "Delivery" },
+  //{ value: "delivery", label: "Delivery" },
   { value: "pickup", label: "Pickup" },
 ];
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
   { value: "cash", label: "Cash" },
   { value: "card", label: "Card" },
-  { value: "online", label: "Online" },
+  //{ value: "online", label: "Online" },
 ];
 
 /** One line being built in the item composer, before it's added to the order. */
