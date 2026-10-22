@@ -1,18 +1,8 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { canAccess, resolveRole, roleFromToken, type Role } from "@/lib/roles";
 
-export type Role =
-  | "Administrator"
-  | "Restaurant Manager"
-  | "Kitchen Staff"
-  | "Cashier"
-  | "Viewer";
+export type { Role };
 
 export interface Session {
   username: string;
@@ -29,9 +19,8 @@ interface AuthContextType {
 }
 
 const KEY = "aveline-session";
- 
-const API_URL = import.meta.env["VITE_API_URL"];
 
+const API_URL = import.meta.env["VITE_API_URL"];
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
@@ -44,14 +33,17 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] =useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem(KEY);
 
     if (raw) {
       try {
-        setSession(JSON.parse(raw));
+        const stored: Session = JSON.parse(raw);
+        // Sessions saved before roles existed: recover the role from the token.
+        const role = stored.role ?? roleFromToken(stored.token);
+        setSession(role ? { ...stored, role } : stored);
       } catch {
         localStorage.removeItem(KEY);
       }
@@ -60,10 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const signIn = async (
-    username: string,
-    password: string
-  ): Promise<Session> => {
+  const signIn = async (username: string, password: string): Promise<Session> => {
     const response = await fetch(`${API_URL}/api/login_check`, {
       method: "POST",
       headers: {
@@ -88,9 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
+    const role = resolveRole(data, data.token);
     const next: Session = {
       username,
       token: data.token,
+      ...(role ? { role } : {}),
     };
 
     localStorage.setItem(KEY, JSON.stringify(next));
@@ -126,26 +117,26 @@ export const useAuth = () => useContext(AuthContext);
 export function useRequireAuth() {
   const { session, ready } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const allowed = canAccess(session?.role, pathname);
 
   useEffect(() => {
-    if (ready && !session) {
-      navigate({
-        to: "/",
-        replace: true,
-      });
+    if (!ready) return;
+    if (!session) {
+      navigate({ to: "/", replace: true });
+    } else if (!allowed) {
+      // Signed in, but this role may not open this page.
+      navigate({ to: "/dashboard", replace: true });
     }
-  }, [ready, session, navigate]);
+  }, [ready, session, allowed, navigate]);
 
-  return session;
+  return session && allowed ? session : null;
 }
 
 /**
  * Helper for authenticated API requests.
  */
-export async function api(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<Response> {
+export async function api(endpoint: string, options: RequestInit = {}): Promise<Response> {
   const raw = localStorage.getItem(KEY);
   const session: Session | null = raw ? JSON.parse(raw) : null;
 

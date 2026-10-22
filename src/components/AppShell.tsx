@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
+import { canAccess } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -62,10 +63,12 @@ function NavList({
   onNavigate?: (() => void) | undefined;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { session } = useAuth();
+  const items = nav.filter((item) => canAccess(session?.role, item.to));
 
   return (
     <nav className="flex flex-col gap-1">
-      {nav.map((item) => {
+      {items.map((item) => {
         const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
         return (
           <Link
@@ -111,7 +114,9 @@ function SidebarBody({
       <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
         {!compact && (
           <>
-            <p className="truncate text-sm font-medium">{session?.name ?? "Guest"}</p>
+            <p className="truncate text-sm font-medium">
+              {session?.name ?? session?.username ?? "Guest"}
+            </p>
             <p className="mb-3 truncate text-xs text-muted-foreground">{session?.role}</p>
           </>
         )}
@@ -144,6 +149,10 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { theme, toggle } = useTheme();
+  const { session, ready } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // While a forbidden page is redirecting away, don't render its content.
+  const allowed = ready && !!session && canAccess(session.role, pathname);
   const [compact, setCompact] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -182,20 +191,16 @@ export function AppShell({
             <ChevronsLeft className={cn("size-5 transition-transform", compact && "rotate-180")} />
           </Button>
 
-           {
-            /**<div className="relative hidden max-w-xs flex-1 md:block">
+          {/**<div className="relative hidden max-w-xs flex-1 md:block">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search orders, products…" className="h-9 bg-background/60 pl-9" />
-          </div> */
-           }
+          </div> */}
 
           <div className="ml-auto flex items-center gap-1.5">
-            {
-              /**<Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+            {/**<Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
               <Bell className="size-5" />
               <span className="absolute top-2 right-2 size-2 rounded-full bg-primary" />
-            </Button> */
-            }
+            </Button> */}
             <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
               {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
             </Button>
@@ -211,7 +216,7 @@ export function AppShell({
               </div>
               {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
             </div>
-            {children}
+            {allowed ? children : null}
           </div>
         </main>
       </div>

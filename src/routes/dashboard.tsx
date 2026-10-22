@@ -36,6 +36,7 @@ import { StatCard, SectionCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRequireAuth } from "@/lib/auth";
+import { canAccess, canSeeFullDashboard } from "@/lib/roles";
 import { fetchDashboard, type Dashboard } from "@/lib/dashboard-api";
 import { currency } from "@/lib/mock-data";
 
@@ -77,7 +78,16 @@ function EmptyChart({ message = "No data yet" }: { message?: string }) {
 
 const chartColor = (i: number) => `var(--color-chart-${(i % 5) + 1})`;
 
-function DashboardSkeleton() {
+function DashboardSkeleton({ full }: { full: boolean }) {
+  if (!full) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-[132px] rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -108,13 +118,16 @@ function DashboardPage() {
     refetchInterval: 30_000,
   });
   const data = dashboardQuery.data;
+  // Administrators see every stat; Kitchen Staff / Cashier only order counts.
+  const fullAccess = canSeeFullDashboard(session?.role);
 
-  const quickActions = [
+  const allQuickActions = [
     { label: "Add Restaurant", icon: Store, to: "/restaurants" as const },
     { label: "Add Product", icon: UtensilsCrossed, to: "/products" as const },
     { label: "View Kitchen", icon: MonitorPlay, to: "/kitchen" as const },
     { label: "Menu Management", icon: BookOpenText, to: "/categories" as const },
   ];
+  const quickActions = allQuickActions.filter((a) => canAccess(session?.role, a.to));
 
   return (
     <AppShell
@@ -134,7 +147,7 @@ function DashboardPage() {
       }
     >
       {dashboardQuery.isPending ? (
-        <DashboardSkeleton />
+        <DashboardSkeleton full={fullAccess} />
       ) : dashboardQuery.isError || !data ? (
         <div className="panel flex flex-col items-center gap-3 p-10 text-center">
           <span className="grid size-11 place-items-center rounded-full bg-destructive/12 text-destructive">
@@ -158,7 +171,7 @@ function DashboardPage() {
           </Button>
         </div>
       ) : (
-        <DashboardContent data={data} quickActions={quickActions} />
+        <DashboardContent data={data} quickActions={quickActions} fullAccess={fullAccess} />
       )}
     </AppShell>
   );
@@ -167,8 +180,10 @@ function DashboardPage() {
 function DashboardContent({
   data,
   quickActions,
+  fullAccess,
 }: {
   data: Dashboard;
+  fullAccess: boolean;
   quickActions: {
     label: string;
     icon: LucideIcon;
@@ -183,20 +198,28 @@ function DashboardContent({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Total Restaurants"
-          value={String(stats.totalRestaurants)}
-          delta={deltas.totalRestaurants}
-          icon={Store}
-        />
-        <StatCard
-          label="Total Products"
-          value={String(stats.totalProducts)}
-          delta={deltas.totalProducts}
-          icon={UtensilsCrossed}
-          tone="info"
-        />
+      <div
+        className={
+          fullAccess ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-4" : "grid gap-4 sm:grid-cols-3"
+        }
+      >
+        {fullAccess && (
+          <StatCard
+            label="Total Restaurants"
+            value={String(stats.totalRestaurants)}
+            delta={deltas.totalRestaurants}
+            icon={Store}
+          />
+        )}
+        {fullAccess && (
+          <StatCard
+            label="Total Products"
+            value={String(stats.totalProducts)}
+            delta={deltas.totalProducts}
+            icon={UtensilsCrossed}
+            tone="info"
+          />
+        )}
         <StatCard
           label="Orders Today"
           value={String(stats.ordersToday)}
@@ -218,94 +241,104 @@ function DashboardContent({
           icon={CircleCheckBig}
           tone="success"
         />
-        <StatCard
-          label="Revenue Today"
-          value={currency(stats.revenueToday)}
-          delta={deltas.revenueToday}
-          icon={Wallet}
-        />
-        <StatCard
-          label="Revenue This Month"
-          value={currency(stats.revenueThisMonth)}
-          delta={deltas.revenueThisMonth}
-          icon={Wallet}
-          tone="info"
-        />
-        <StatCard
-          label="Avg. Ticket This Month"
-          value={currency(stats.avgTicket)}
-          delta={deltas.avgTicket}
-          icon={ReceiptText}
-          tone="warning"
-        />
+        {fullAccess && (
+          <StatCard
+            label="Revenue Today"
+            value={currency(stats.revenueToday)}
+            delta={deltas.revenueToday}
+            icon={Wallet}
+          />
+        )}
+        {fullAccess && (
+          <StatCard
+            label="Revenue This Month"
+            value={currency(stats.revenueThisMonth)}
+            delta={deltas.revenueThisMonth}
+            icon={Wallet}
+            tone="info"
+          />
+        )}
+        {fullAccess && (
+          <StatCard
+            label="Avg. Ticket This Month"
+            value={currency(stats.avgTicket)}
+            delta={deltas.avgTicket}
+            icon={ReceiptText}
+            tone="warning"
+          />
+        )}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <SectionCard
-          title="Revenue evolution"
-          description="Last 7 days across all restaurants"
-          className="xl:col-span-2"
-        >
-          <div className="h-[280px]">
-            {revenueEvolution.length === 0 ? (
-              <EmptyChart />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueEvolution}>
-                  <defs>
-                    <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="var(--color-border)" vertical={false} />
-                  <XAxis
-                    dataKey="day"
-                    stroke="var(--color-muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="var(--color-muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip {...tooltipStyle} />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--color-chart-1)"
-                    strokeWidth={2.5}
-                    fill="url(#rev)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </SectionCard>
+      {(fullAccess || quickActions.length > 0) && (
+        <div className="grid gap-4 xl:grid-cols-3">
+          {fullAccess && (
+            <SectionCard
+              title="Revenue evolution"
+              description="Last 7 days across all restaurants"
+              className="xl:col-span-2"
+            >
+              <div className="h-[280px]">
+                {revenueEvolution.length === 0 ? (
+                  <EmptyChart />
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={revenueEvolution}>
+                      <defs>
+                        <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.45} />
+                          <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid stroke="var(--color-border)" vertical={false} />
+                      <XAxis
+                        dataKey="day"
+                        stroke="var(--color-muted-foreground)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="var(--color-muted-foreground)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip {...tooltipStyle} />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="var(--color-chart-1)"
+                        strokeWidth={2.5}
+                        fill="url(#rev)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </SectionCard>
+          )}
 
-         <SectionCard title="Quick actions">
-          <div className="grid gap-2">
-            {quickActions.map((a) => (
-              <Link
-                key={a.label}
-                to={a.to}
-                className="group flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3.5 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-accent"
-              >
-                <span className="grid size-9 place-items-center rounded-lg bg-primary/12 text-primary">
-                  <a.icon className="size-4.5" />
-                </span>
-                {a.label}
-                <ArrowUpRight className="ml-auto size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </Link>
-            ))}
-          </div>
-        </SectionCard>
+          {quickActions.length > 0 && (
+            <SectionCard title="Quick actions">
+              <div className="grid gap-2">
+                {quickActions.map((a) => (
+                  <Link
+                    key={a.label}
+                    to={a.to}
+                    className="group flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3.5 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-accent"
+                  >
+                    <span className="grid size-9 place-items-center rounded-lg bg-primary/12 text-primary">
+                      <a.icon className="size-4.5" />
+                    </span>
+                    {a.label}
+                    <ArrowUpRight className="ml-auto size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </Link>
+                ))}
+              </div>
+            </SectionCard>
+          )}
 
-        {
-          /**
+          {/**
            * <SectionCard title="Orders by restaurant" description="Today">
           <div className="h-[280px]">
             {ordersByRestaurant.length === 0 ? (
@@ -341,13 +374,12 @@ function DashboardContent({
             ))}
           </ul>
         </SectionCard>
-           */
-        }
-      </div>
+           */}
+        </div>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-2">
-        {
-          /**
+        {/**
            * <SectionCard
           title="Orders by hour"
           description={peak ? `Peak service ${peak.hour}` : "Today"}
@@ -380,11 +412,9 @@ function DashboardContent({
             )}
           </div>
         </SectionCard>
-           */
-        }
+           */}
 
-        {
-          /**
+        {/**
            * <SectionCard title="Most sold products" description="Last 7 days">
           <div className="h-[240px]">
             {topProducts.length === 0 ? (
@@ -421,8 +451,7 @@ function DashboardContent({
             )}
           </div>
         </SectionCard>
-           */
-        }
+           */}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -447,8 +476,6 @@ function DashboardContent({
         </SectionCard>
         
            */}
-
-       
       </div>
     </>
   );
