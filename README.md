@@ -512,3 +512,9 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Static build (dist/)
+
+`npm run build` produces a classic static site in `dist/` (`index.html`, `assets/`, `404.html`) –
+no `.output` / server bundle. It uses TanStack Start SPA mode (`vite.config.ts`) and
+`scripts/flatten-dist.mjs`. Serve `dist/` with SPA fallback to `index.html` (see `npm run preview`).
