@@ -12,7 +12,7 @@ export function StatCard({
 }: {
   label: string;
   value: string;
-  delta?: string;
+  delta?: string | undefined;
   icon: LucideIcon;
   tone?: "primary" | "success" | "info" | "warning";
 }) {

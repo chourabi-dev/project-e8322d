@@ -1,0 +1,196 @@
+import { api } from "@/lib/auth";
+
+export type CategoryKind = "menu" | "kitchen";
+
+export type Category = {
+  id: string;
+  kind: CategoryKind;
+  name: string;
+  /** menu only */
+  products: number;
+  visible: boolean;
+  /** menu only — kitchen category (station) tickets are routed to */
+  kitchenCategoryId: string;
+  /** kitchen only */
+  station: string;
+  screens: number;
+  restaurantId: string;
+  restaurantName: string;
+};
+
+export type CategoryInput = {
+  kind: CategoryKind;
+  name: string;
+  visible: boolean;
+  kitchenCategoryId: string;
+  station: string;
+  screens: number;
+  restaurantId: string;
+};
+
+
+
+const ENDPOINT: Record<CategoryKind, string> = {
+  menu: "/api/menu_categories",
+  kitchen: "/api/kitchen_categories",
+};
+
+/** API responses may be a plain array, a Hydra collection, or { data: [...] }. */
+function toArray(payload: unknown): Record<string, unknown>[] {
+  if (Array.isArray(payload)) return payload as Record<string, unknown>[];
+  if (payload && typeof payload === "object") {
+    const obj = payload as Record<string, unknown>;
+    for (const key of ["member", "hydra:member", "data", "items", "categories"]) {
+      if (Array.isArray(obj[key])) return obj[key] as Record<string, unknown>[];
+    }
+  }
+  return [];
+}
+
+const str = (...values: unknown[]) => {
+  for (const v of values) if (typeof v === "string" && v.length > 0) return v;
+  return "";
+};
+const num = (...values: unknown[]) => {
+  for (const v of values) {
+    const n = typeof v === "string" ? Number(v) : v;
+    if (typeof n === "number" && Number.isFinite(n)) return n;
+  }
+  return 0;
+};
+const bool = (value: unknown, fallback = false) =>
+  typeof value === "boolean" ? value : typeof value === "number" ? value !== 0 : fallback;
+
+/** restaurant may be an id, an IRI ("/api/restaurants/3") or a nested object. */
+function restaurantRef(raw: Record<string, unknown>) {
+  const value = raw["restaurant"] ?? raw["restaurantId"] ?? raw["restaurant_id"];
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return {
+      id: str(obj["id"], obj["@id"]).split("/").pop() ?? "",
+      name: str(obj["name"], obj["title"]),
+    };
+  }
+  const asString = typeof value === "number" ? `${value}` : str(value);
+  return { id: asString.split("/").pop() ?? "", name: "" };
+}
+
+/** kitchen category link may be an id, an IRI or a nested object. */
+function kitchenCategoryRef(raw: Record<string, unknown>) {
+  const value =
+    raw["kitchenCategory"] ??
+    raw["kitchen_category"] ??
+    raw["kitchenCategoryId"] ??
+    raw["kitchen_category_id"];
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return str(obj["id"], obj["@id"]).split("/").pop() ?? "";
+  }
+  const asString = typeof value === "number" ? `${value}` : str(value);
+  return asString.split("/").pop() ?? "";
+}
+
+export function normalizeCategory(
+  raw: Record<string, unknown>,
+  kind: CategoryKind,
+  index = 0,
+): Category {
+  const r = raw;
+  const restaurant = restaurantRef(r);
+  return {
+    id: `${r["id"]}`,
+    kind,
+    name: str(r["name"], r["title"], "Untitled category"),
+    products: num(r["products"], r["productsCount"], r["product_count"]),
+    visible: bool(r["visible"] ?? r["isVisible"] ?? r["active"], true),
+    kitchenCategoryId: kitchenCategoryRef(r),
+    station: str(r["station"], r["stationName"], r["screenName"]),
+    screens: num(r["screens"], r["screensCount"]) || 1,
+    restaurantId: restaurant.id,
+    restaurantName: restaurant.name,
+  };
+}
+
+
+
+async function parse(response: Response) {
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const body = await response.json();
+      message = body.message || body.detail || body.error || message;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message);
+  }
+  if (response.status === 204) return null;
+  return response.json().catch(() => null);
+}
+
+function payloadFor(input: CategoryInput, restaurantId?: string) {
+  const base: Record<string, unknown> = { name: input.name };
+  const restaurant = input.restaurantId || restaurantId;
+  if (restaurant) base["restaurant"] = restaurant;
+  if (input.kind === "menu") {
+    base["visible"] = input.visible;
+    base["kitchenCategory"] = input.kitchenCategoryId || null;
+  } else {
+    base["station"] = input.station;
+    base["screens"] = input.screens;
+  }
+  return base;
+}
+
+
+
+function withRestaurant(path: string, restaurantId?: string) {
+  return restaurantId ? `${path}?restaurant=${encodeURIComponent(restaurantId)}` : path;
+}
+
+export async function fetchCategories(
+  kind: CategoryKind,
+  restaurantId?: string,
+): Promise<Category[]> {
+  const payload = await parse(await api(withRestaurant(ENDPOINT[kind], restaurantId)));
+  return toArray(payload).map((raw, i) => normalizeCategory(raw, kind, i));
+}
+
+export async function createCategory(
+  input: CategoryInput,
+  restaurantId?: string,
+): Promise<Category> {
+  const payload = await parse(
+    await api(ENDPOINT[input.kind], {
+      method: "POST",
+      body: JSON.stringify(payloadFor(input, restaurantId)),
+    }),
+  );
+  return normalizeCategory((payload as Record<string, unknown>) ?? { ...input }, input.kind);
+}
+
+export async function updateCategory(
+  id: string,
+  input: CategoryInput,
+  restaurantId?: string,
+): Promise<Category> {
+
+  console.log("UPDATING ...");
+  console.log(id);
+  
+  
+  const payload = await parse(
+    await api(`${ENDPOINT[input.kind]}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payloadFor(input, restaurantId)),
+    }),
+  );
+  return normalizeCategory(
+    (payload as Record<string, unknown>) ?? { id, ...input },
+    input.kind,
+  );
+}
+
+export async function deleteCategory(kind: CategoryKind, id: string): Promise<void> {
+  await parse(await api(`${ENDPOINT[kind]}/${id}`, { method: "DELETE" }));
+}
